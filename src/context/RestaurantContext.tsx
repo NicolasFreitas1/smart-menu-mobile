@@ -1,6 +1,12 @@
 import { getRestaurantById } from "@/api/get-restaurant-by-id";
-import { Restaurant } from "@/domain/restaurant";
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { Restaurant } from "../domain/restaurant";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  ReactNode,
+} from "react";
 import { toast } from "sonner"; // ⚠️ substitua se não estiver usando `sonner` no mobile
 
 interface RestaurantContextProps {
@@ -23,7 +29,10 @@ interface RestaurantProviderProps {
   restaurantId?: string;
 }
 
-export function RestaurantProvider({ children, restaurantId }: RestaurantProviderProps) {
+export function RestaurantProvider({
+  children,
+  restaurantId,
+}: RestaurantProviderProps) {
   const [restaurant, setRestaurant] = useState<Restaurant | undefined>();
   const [isLoading, setIsLoading] = useState(true);
 

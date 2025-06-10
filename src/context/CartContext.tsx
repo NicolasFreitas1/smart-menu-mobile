@@ -1,4 +1,4 @@
-import { Dish } from "@/domain/dish";
+import { Dish } from "../domain/dish";
 import {
   createContext,
   useContext,

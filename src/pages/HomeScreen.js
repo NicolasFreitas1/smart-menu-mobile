@@ -1,9 +1,11 @@
 import { View, Text, StyleSheet } from 'react-native';
+import Button from '../components/ui/button';
 
 export default function HomeScreen() {
   return (
     <View style={styles.container}>
       <Text>Bem-vindo ao app React Native!</Text>
+      <Button style={{backgroundColor: "red", }}> TESTE</Button>
     </View>
   );
 }

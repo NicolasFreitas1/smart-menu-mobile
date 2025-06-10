@@ -1,7 +1,8 @@
-export interface Restaurant {
-    id: string
-    name: string;
-    addressId: string;
-    createdAt: Date;
-    updatedAt?: Date | null;
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  isAdmin: boolean;
+  restaurantId: string;
+  createdAt: string;
 }

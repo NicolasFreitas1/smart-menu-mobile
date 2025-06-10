@@ -1,8 +1,20 @@
-import React from 'react';
-import { TouchableOpacity, Text, StyleSheet, ViewStyle, TextStyle } from 'react-native';
+import React from "react";
+import {
+  TouchableOpacity,
+  Text,
+  StyleSheet,
+  ViewStyle,
+  TextStyle,
+} from "react-native";
 
-type Variant = 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link';
-type Size = 'default' | 'sm' | 'lg' | 'icon';
+type Variant =
+  | "default"
+  | "destructive"
+  | "outline"
+  | "secondary"
+  | "ghost"
+  | "link";
+type Size = "default" | "sm" | "lg" | "icon";
 
 interface ButtonProps {
   title: string;
@@ -17,8 +29,8 @@ interface ButtonProps {
 const Button: React.FC<ButtonProps> = ({
   title,
   onPress,
-  variant = 'default',
-  size = 'default',
+  variant = "default",
+  size = "default",
   disabled = false,
   style,
   textStyle,
@@ -39,22 +51,24 @@ const Button: React.FC<ButtonProps> = ({
         style,
       ]}
     >
-      <Text style={[styles.textBase, textVariantStyle, textStyle]}>{title}</Text>
+      <Text style={[styles.textBase, textVariantStyle, textStyle]}>
+        {title}
+      </Text>
     </TouchableOpacity>
   );
 };
 
 const styles = StyleSheet.create({
   buttonBase: {
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     borderRadius: 6,
     paddingVertical: 10,
     paddingHorizontal: 16,
   },
   textBase: {
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   disabled: {
     opacity: 0.5,
@@ -64,47 +78,47 @@ const styles = StyleSheet.create({
 // 🔵 Variant styles
 const buttonVariantStyles: Record<Variant, ViewStyle> = {
   default: {
-    backgroundColor: '#2563EB', // bg-primary
+    backgroundColor: "#2563EB", // bg-primary
   },
   destructive: {
-    backgroundColor: '#DC2626',
+    backgroundColor: "#DC2626",
   },
   outline: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderWidth: 1,
-    borderColor: '#D1D5DB',
+    borderColor: "#D1D5DB",
   },
   secondary: {
-    backgroundColor: '#E5E7EB',
+    backgroundColor: "#E5E7EB",
   },
   ghost: {
-    backgroundColor: 'transparent',
+    backgroundColor: "transparent",
   },
   link: {
-    backgroundColor: 'transparent',
+    backgroundColor: "transparent",
   },
 };
 
 // 🔤 Text styles by variant
 const buttonTextStyles: Record<Variant, TextStyle> = {
   default: {
-    color: '#fff',
+    color: "#fff",
   },
   destructive: {
-    color: '#fff',
+    color: "#fff",
   },
   outline: {
-    color: '#111827',
+    color: "#111827",
   },
   secondary: {
-    color: '#111827',
+    color: "#111827",
   },
   ghost: {
-    color: '#111827',
+    color: "#111827",
   },
   link: {
-    color: '#2563EB',
-    textDecorationLine: 'underline',
+    color: "#2563EB",
+    textDecorationLine: "underline",
   },
 };
 

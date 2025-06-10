@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Modal, View, Text, TouchableOpacity, StyleSheet } from "react-native";
-import { useTheme } from "@/components/theme/theme-provider";
+import { useTheme } from "../theme/theme-provider";
 
 export function ModeToggle() {
   const { setTheme } = useTheme();
