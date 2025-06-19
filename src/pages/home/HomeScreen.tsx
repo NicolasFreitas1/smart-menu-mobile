@@ -6,6 +6,7 @@ import { useCart } from "../../context/CartContext";
 import { OptionCard } from "./components/option-card";
 import { CartResume } from "../../components/cart-resume";
 import { ThemeToggle } from "../../theme/theme-toggle";
+import { SafeContainer } from "../../components/ui/safe-container";
 
 export function HomeScreen() {
   const { colors } = useTheme();
@@ -14,28 +15,14 @@ export function HomeScreen() {
 
   if (isLoading) {
     return (
-      <View
-        style={[
-          styles.container,
-          {
-            backgroundColor: colors.background,
-          },
-        ]}
-      >
+      <SafeContainer style={{ justifyContent: "center", alignItems: "center" }}>
         <ActivityIndicator size="large" color={colors.primary} />
-      </View>
+      </SafeContainer>
     );
   }
 
   return (
-    <View
-      style={[
-        styles.container,
-        {
-          backgroundColor: colors.background,
-        },
-      ]}
-    >
+    <SafeContainer>
       <View style={styles.header}>
         <View style={{ flex: 1 }} />
         <ThemeToggle />
@@ -79,14 +66,11 @@ export function HomeScreen() {
       {hasItems && (
         <CartResume totalItems={totalItems} totalPrice={totalPrice} />
       )}
-    </View>
+    </SafeContainer>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
   header: {
     flexDirection: "row",
     justifyContent: "flex-end",

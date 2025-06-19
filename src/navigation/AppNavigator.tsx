@@ -4,7 +4,7 @@ import Feather from "react-native-vector-icons/Feather";
 import FontAwesome5 from "react-native-vector-icons/FontAwesome5";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import { HomeScreen } from "../pages/home/HomeScreen";
-import { MenuScreen } from "../pages/MenuScreen";
+import { MenuScreen } from "../pages/menu/MenuScreen";
 import { AssistantScreen } from "../pages/AssistantScreen";
 import { SuggestionScreen } from "../pages/SuggestionScreen";
 import { CartScreen } from "../pages/CartScreen";

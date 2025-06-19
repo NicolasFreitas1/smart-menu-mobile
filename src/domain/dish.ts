@@ -3,9 +3,6 @@ export interface Dish {
   name: string;
   description: string;
   price: number;
-  image?: string;
-  categoryId: string;
-  ingredients?: string[];
-  available: boolean;
-  preparationTime?: number; // em minutos
+  restaurantId: string;
+  categories?: Array<string>;
 }

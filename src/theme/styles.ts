@@ -8,6 +8,7 @@ export const createGlobalStyles = (colors: ThemeColors) =>
       flex: 1,
       backgroundColor: colors.background,
       padding: 16,
+      paddingBottom: 80,
     },
     card: {
       backgroundColor: colors.card,

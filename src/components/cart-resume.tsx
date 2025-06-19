@@ -84,7 +84,7 @@ export function CartResume({ totalItems, totalPrice }: CartResumeProps) {
 const styles = StyleSheet.create({
   container: {
     position: "absolute",
-    bottom: 24,
+    bottom: 95,
     left: 24,
     right: 24,
     borderRadius: 999,

@@ -1,6 +1,7 @@
 import React from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { StatusBar } from "react-native";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 import { AppNavigator } from "./navigation/AppNavigator";
 import { ThemeProvider, useTheme } from "./theme/theme-provider";
 import { RestaurantProvider } from "./context/RestaurantContext";
@@ -56,12 +57,14 @@ export default function App() {
   const restaurantId = "4a94dbcc-b9b7-470c-9a47-c61062f66579";
 
   return (
-    <ThemeProvider>
-      <RestaurantProvider restaurantId={restaurantId}>
-        <CartProvider>
-          <AppContent />
-        </CartProvider>
-      </RestaurantProvider>
-    </ThemeProvider>
+    <SafeAreaProvider>
+      <ThemeProvider>
+        <RestaurantProvider restaurantId={restaurantId}>
+          <CartProvider>
+            <AppContent />
+          </CartProvider>
+        </RestaurantProvider>
+      </ThemeProvider>
+    </SafeAreaProvider>
   );
 }
