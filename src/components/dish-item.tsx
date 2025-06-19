@@ -3,6 +3,7 @@ import { formatCurrency } from "../lib/format";
 import { useCart } from "../context/CartContext";
 import { useRestaurant } from "../context/RestaurantContext";
 import { useGlobalStyles } from "../theme/hooks";
+import { Button } from "./ui/button";
 
 interface DishItemProps {
   id: string;
@@ -71,21 +72,11 @@ export function DishItem({ id, name, description, price }: DishItemProps) {
 
       <View style={{ alignItems: "center" }}>
         {!cartItem ? (
-          <TouchableOpacity
+          <Button
+            title="Selecionar"
             onPress={handleAdd}
-            style={{
-              backgroundColor: "#48BB78",
-              paddingVertical: 8,
-              paddingHorizontal: 16,
-              borderRadius: 6,
-              minWidth: 120,
-              alignItems: "center",
-            }}
-          >
-            <Text style={{ color: "#FFFFFF", fontWeight: "600" }}>
-              Selecionar
-            </Text>
-          </TouchableOpacity>
+            style={{ minWidth: 120 }}
+          />
         ) : (
           <View style={{ flexDirection: "row", alignItems: "center", gap: 16 }}>
             <TouchableOpacity

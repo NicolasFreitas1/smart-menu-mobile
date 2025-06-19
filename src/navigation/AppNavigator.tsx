@@ -6,8 +6,8 @@ import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityI
 import { HomeScreen } from "../pages/home/HomeScreen";
 import { MenuScreen } from "../pages/menu/MenuScreen";
 import { AssistantScreen } from "../pages/AssistantScreen";
-import { SuggestionScreen } from "../pages/SuggestionScreen";
-import { CartScreen } from "../pages/CartScreen";
+import { SurpriseMeScreen } from "../pages/surprise-me/SurpriseMeScreen";
+import { CartScreen } from "../pages/cart/CartScreen";
 import { useGlobalStyles } from "../theme/hooks";
 import { useTheme } from "../theme/theme-provider";
 
@@ -87,11 +87,11 @@ export function AppNavigator() {
       />
       <Tab.Screen
         name="Surprise"
-        component={SuggestionScreen}
+        component={SurpriseMeScreen}
         options={{
           tabBarIcon: ({ focused }) => (
             <MaterialCommunityIcons
-              name="lightbulb-on-outline"
+              name="dice-multiple"
               size={24}
               color={focused ? colors.primary : colors.mutedForeground}
             />

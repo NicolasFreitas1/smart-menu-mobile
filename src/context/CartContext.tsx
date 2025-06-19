@@ -22,6 +22,7 @@ interface CartContextData {
   updateItemQuantity: (id: string, quantity: number) => void;
   updateItemObservations: (id: string, observations: string) => void;
   clearCart: () => void;
+  clearCartDirectly: () => void;
   totalItems: number;
   totalPrice: number;
   hasItems: boolean;
@@ -135,6 +136,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
     );
   }, []);
 
+  const clearCartDirectly = useCallback(() => {
+    setCartItems([]);
+  }, []);
+
   const totalItems = cartItems.reduce((acc, item) => acc + item.quantity, 0);
   const totalPrice = cartItems.reduce(
     (acc, item) => acc + item.price * item.quantity,
@@ -149,6 +154,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     updateItemQuantity,
     updateItemObservations,
     clearCart,
+    clearCartDirectly,
     totalItems,
     totalPrice,
     hasItems,

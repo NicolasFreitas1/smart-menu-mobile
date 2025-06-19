@@ -27,7 +27,7 @@ export function MenuScreen() {
   const [dishes, setDishes] = useState<DataWithPagination<Dish> | undefined>(
     undefined
   );
-  const [categories, setCategories] = useState<string[]>(["Todas"]);
+  const [categories, setCategories] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchDishes = useCallback(async () => {
@@ -74,7 +74,7 @@ export function MenuScreen() {
       console.log("🔄 Fetching categories...");
       const result = await getCategories();
       const names = result.map((cat) => cat.name);
-      setCategories(["Todas", ...names]);
+      setCategories(names);
       console.log("✅ Categories loaded:", names);
     } catch (error) {
       console.error("❌ Error fetching categories:", error);
@@ -99,7 +99,6 @@ export function MenuScreen() {
     [setCategoryFilter]
   );
 
-  // Determina qual categoria está selecionada para exibir no filtro
   const selectedCategory = filters.categoryFilter || "Todas";
 
   console.log("📊 Current state:", {
@@ -120,15 +119,22 @@ export function MenuScreen() {
   return (
     <SafeContainer>
       <View style={{ paddingTop: 16 }}>
-        <Text
-          style={[
-            styles.subtitle,
-            { textAlign: "center", paddingHorizontal: 16, marginBottom: 16 },
-          ]}
+        <View
+          style={{
+            alignItems: "center",
+            gap: 8,
+            paddingHorizontal: 16,
+            marginBottom: 24,
+          }}
         >
-          Explore os pratos disponíveis no cardápio do restaurante. Escolha seus
-          favoritos e adicione ao carrinho para fazer seu pedido.
-        </Text>
+          <Text style={[styles.text, { fontSize: 24, fontWeight: "700" }]}>
+            Cardápio
+          </Text>
+          <Text style={[styles.mutedText, { textAlign: "center" }]}>
+            Explore os pratos disponíveis no cardápio do restaurante. Escolha
+            seus favoritos e adicione ao carrinho para fazer seu pedido.
+          </Text>
+        </View>
 
         <CategoryFilter
           categories={categories}

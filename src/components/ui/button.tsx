@@ -37,31 +37,43 @@ export const Button: React.FC<ButtonProps> = ({
   style,
   textStyle,
 }) => {
+  const variantStyle = getButtonVariantStyle(variant);
+  const variantTextStyle = getButtonTextStyle(variant);
+  const sizeStyle = buttonSizeStyles[size];
+
   return (
     <TouchableOpacity
       onPress={onPress}
       disabled={disabled}
-      style={[styles.buttonBase, disabled && styles.disabled, style]}
+      style={[
+        styles.buttonBase,
+        sizeStyle,
+        variantStyle,
+        disabled && styles.disabled,
+        style,
+      ]}
     >
-      <Text style={[styles.textBase, textStyle]}>{title}</Text>
+      <Text style={[styles.textBase, variantTextStyle, textStyle]}>
+        {title}
+      </Text>
     </TouchableOpacity>
   );
 };
 
-function getButtonVariantStyle(variant: Variant, colors: any): ViewStyle {
+function getButtonVariantStyle(variant: Variant): ViewStyle {
   switch (variant) {
     case "default":
-      return { backgroundColor: colors.primary };
+      return { backgroundColor: "#48BB78" };
     case "destructive":
-      return { backgroundColor: colors.destructive };
+      return { backgroundColor: "#E53E3E" };
     case "outline":
       return {
-        backgroundColor: colors.background,
+        backgroundColor: "transparent",
         borderWidth: 1,
-        borderColor: colors.border,
+        borderColor: "#E2E8F0",
       };
     case "secondary":
-      return { backgroundColor: colors.secondary };
+      return { backgroundColor: "#F7FAFC" };
     case "ghost":
       return { backgroundColor: "transparent" };
     case "link":
@@ -71,20 +83,20 @@ function getButtonVariantStyle(variant: Variant, colors: any): ViewStyle {
   }
 }
 
-function getButtonTextStyle(variant: Variant, colors: any): TextStyle {
+function getButtonTextStyle(variant: Variant): TextStyle {
   switch (variant) {
     case "default":
-      return { color: colors.primaryForeground };
+      return { color: "#FFFFFF" };
     case "destructive":
-      return { color: colors.primaryForeground };
+      return { color: "#FFFFFF" };
     case "outline":
-      return { color: colors.foreground };
+      return { color: "#2D3748" };
     case "secondary":
-      return { color: colors.foreground };
+      return { color: "#2D3748" };
     case "ghost":
-      return { color: colors.foreground };
+      return { color: "#2D3748" };
     case "link":
-      return { color: colors.primary, textDecorationLine: "underline" };
+      return { color: "#48BB78", textDecorationLine: "underline" };
     default:
       return {};
   }

@@ -52,3 +52,27 @@ export async function getCategories(): Promise<Category[]> {
   const response = await api.get<Category[]>("/categories");
   return response.data;
 }
+
+interface GetRandomDishFromRestaurantParams {
+  restaurantId: string;
+  category: string;
+}
+
+interface GetRandomDishFromRestaurantResponse {
+  dish: Dish;
+}
+
+export async function getRandomDishFromRestaurant({
+  restaurantId,
+  category,
+}: GetRandomDishFromRestaurantParams): Promise<GetRandomDishFromRestaurantResponse> {
+  const response = await api.get<GetRandomDishFromRestaurantResponse>(
+    `/dishes/random/${restaurantId}`,
+    {
+      params: {
+        category,
+      },
+    }
+  );
+  return response.data;
+}
