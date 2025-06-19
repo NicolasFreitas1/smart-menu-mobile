@@ -5,6 +5,7 @@ import {
   StyleSheet,
   ViewStyle,
   TextStyle,
+  GestureResponderEvent,
 } from "react-native";
 
 type Variant =
@@ -18,15 +19,16 @@ type Size = "default" | "sm" | "lg" | "icon";
 
 interface ButtonProps {
   title: string;
-  onPress?: () => void;
+  onPress?: (event: GestureResponderEvent) => void;
   variant?: Variant;
   size?: Size;
   disabled?: boolean;
   style?: ViewStyle;
   textStyle?: TextStyle;
+  children?: React.ReactNode;
 }
 
-const Button: React.FC<ButtonProps> = ({
+export const Button: React.FC<ButtonProps> = ({
   title,
   onPress,
   variant = "default",
@@ -35,28 +37,58 @@ const Button: React.FC<ButtonProps> = ({
   style,
   textStyle,
 }) => {
-  const variantStyle = buttonVariantStyles[variant] || {};
-  const sizeStyle = buttonSizeStyles[size] || {};
-  const textVariantStyle = buttonTextStyles[variant] || {};
-
   return (
     <TouchableOpacity
       onPress={onPress}
       disabled={disabled}
-      style={[
-        styles.buttonBase,
-        variantStyle,
-        sizeStyle,
-        disabled && styles.disabled,
-        style,
-      ]}
+      style={[styles.buttonBase, disabled && styles.disabled, style]}
     >
-      <Text style={[styles.textBase, textVariantStyle, textStyle]}>
-        {title}
-      </Text>
+      <Text style={[styles.textBase, textStyle]}>{title}</Text>
     </TouchableOpacity>
   );
 };
+
+function getButtonVariantStyle(variant: Variant, colors: any): ViewStyle {
+  switch (variant) {
+    case "default":
+      return { backgroundColor: colors.primary };
+    case "destructive":
+      return { backgroundColor: colors.destructive };
+    case "outline":
+      return {
+        backgroundColor: colors.background,
+        borderWidth: 1,
+        borderColor: colors.border,
+      };
+    case "secondary":
+      return { backgroundColor: colors.secondary };
+    case "ghost":
+      return { backgroundColor: "transparent" };
+    case "link":
+      return { backgroundColor: "transparent" };
+    default:
+      return {};
+  }
+}
+
+function getButtonTextStyle(variant: Variant, colors: any): TextStyle {
+  switch (variant) {
+    case "default":
+      return { color: colors.primaryForeground };
+    case "destructive":
+      return { color: colors.primaryForeground };
+    case "outline":
+      return { color: colors.foreground };
+    case "secondary":
+      return { color: colors.foreground };
+    case "ghost":
+      return { color: colors.foreground };
+    case "link":
+      return { color: colors.primary, textDecorationLine: "underline" };
+    default:
+      return {};
+  }
+}
 
 const styles = StyleSheet.create({
   buttonBase: {
@@ -74,53 +106,6 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
 });
-
-// 🔵 Variant styles
-const buttonVariantStyles: Record<Variant, ViewStyle> = {
-  default: {
-    backgroundColor: "#2563EB", // bg-primary
-  },
-  destructive: {
-    backgroundColor: "#DC2626",
-  },
-  outline: {
-    backgroundColor: "#fff",
-    borderWidth: 1,
-    borderColor: "#D1D5DB",
-  },
-  secondary: {
-    backgroundColor: "#E5E7EB",
-  },
-  ghost: {
-    backgroundColor: "transparent",
-  },
-  link: {
-    backgroundColor: "transparent",
-  },
-};
-
-// 🔤 Text styles by variant
-const buttonTextStyles: Record<Variant, TextStyle> = {
-  default: {
-    color: "#fff",
-  },
-  destructive: {
-    color: "#fff",
-  },
-  outline: {
-    color: "#111827",
-  },
-  secondary: {
-    color: "#111827",
-  },
-  ghost: {
-    color: "#111827",
-  },
-  link: {
-    color: "#2563EB",
-    textDecorationLine: "underline",
-  },
-};
 
 // 📐 Size styles
 const buttonSizeStyles: Record<Size, ViewStyle> = {
@@ -142,5 +127,3 @@ const buttonSizeStyles: Record<Size, ViewStyle> = {
     paddingHorizontal: 0,
   },
 };
-
-export default Button;
