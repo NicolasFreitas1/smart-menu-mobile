@@ -1,7 +1,10 @@
-import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
-import { useCart } from "@/context/CartContext";
-import { useRestaurant } from "@/context/RestaurantContext";
+import { View, Text, TouchableOpacity, Image } from "react-native";
+import { formatCurrency } from "../lib/format";
+import { useCart } from "../context/CartContext";
+import { useRestaurant } from "../context/RestaurantContext";
+import { useGlobalStyles } from "../theme/hooks";
+import { Button } from "./ui/button";
+import { FavoriteButton } from "./favorite-button";
 
 interface DishItemProps {
   id: string;
@@ -10,9 +13,10 @@ interface DishItemProps {
   price: number;
 }
 
-export function DishItem({ id, description, name, price }: DishItemProps) {
+export function DishItem({ id, name, description, price }: DishItemProps) {
   const { restaurantId } = useRestaurant();
   const { cartItems, addToCart, removeFromCart } = useCart();
+  const styles = useGlobalStyles();
 
   const cartItem = cartItems.find((item) => item.id === id);
 
@@ -30,129 +34,116 @@ export function DishItem({ id, description, name, price }: DishItemProps) {
     removeFromCart(id);
   }
 
+  const handleFavoriteToggle = (isFavorite: boolean) => {
+    // Aqui você pode adicionar feedback visual ou sonoro
+    console.log(
+      `${name} ${isFavorite ? "adicionado aos" : "removido dos"} favoritos`
+    );
+  };
+
   return (
-    <View style={styles.card}>
-      <View style={styles.cardHeader}>
-        <Text style={styles.boldText}>Prato: <Text>{name}</Text></Text>
+    <View
+      style={[
+        styles.card,
+        {
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.1,
+          shadowRadius: 4,
+          elevation: 3,
+        },
+      ]}
+    >
+      <View
+        style={{
+          flexDirection: "row",
+          justifyContent: "space-between",
+          alignItems: "flex-start",
+          marginBottom: 12,
+        }}
+      >
+        <View style={{ flex: 1 }}>
+          <Text
+            style={[
+              styles.text,
+              { fontSize: 16, fontWeight: "600", marginBottom: 4 },
+            ]}
+          >
+            <Text style={{ fontWeight: "700" }}>Prato: </Text>
+            {name}
+          </Text>
+        </View>
+        <FavoriteButton
+          itemId={id}
+          itemType="dish"
+          size={28}
+          onToggle={handleFavoriteToggle}
+        />
       </View>
-      <View style={styles.cardContent}>
-        <Text style={styles.description}>
-          <Text style={styles.boldText}>Descrição: </Text>
+
+      <View style={{ marginBottom: 12 }}>
+        <Text style={[styles.mutedText, { lineHeight: 20 }]}>
+          <Text style={{ fontWeight: "700" }}>Descrição: </Text>
           {description}
         </Text>
-        <Text style={styles.price}>
-          <Text style={styles.boldText}>Preço: </Text>
-          {Intl.NumberFormat("pt-BR", {
-            style: "currency",
-            currency: "BRL",
-          }).format(price)}
-        </Text>
+      </View>
 
-        <View style={styles.actions}>
-          {!cartItem ? (
+      <Text style={[styles.text, { marginBottom: 16 }]}>
+        <Text style={{ fontWeight: "700" }}>Preço: </Text>
+        {formatCurrency(price)}
+      </Text>
+
+      <View style={{ alignItems: "center" }}>
+        {!cartItem ? (
+          <Button
+            title="Selecionar"
+            onPress={handleAdd}
+            style={{ minWidth: 120 }}
+          />
+        ) : (
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 16 }}>
             <TouchableOpacity
-              style={[styles.button, styles.buttonPrimary]}
-              onPress={handleAdd}
+              onPress={handleRemove}
+              style={[
+                styles.card,
+                {
+                  paddingVertical: 8,
+                  paddingHorizontal: 16,
+                  borderRadius: 6,
+                  minWidth: 44,
+                  alignItems: "center",
+                  padding: 8,
+                },
+              ]}
             >
-              <Text style={[styles.buttonText, styles.buttonTextPrimary]}>
-                Selecionar
+              <Text style={[styles.text, { fontSize: 16, fontWeight: "600" }]}>
+                -
               </Text>
             </TouchableOpacity>
-          ) : (
-            <View style={styles.quantityControl}>
-              <TouchableOpacity
-                style={[styles.button, styles.buttonOutline]}
-                onPress={handleRemove}
-              >
-                <Text style={styles.buttonText}>-</Text>
-              </TouchableOpacity>
 
-              <Text style={styles.quantity}>{cartItem.quantity}</Text>
+            <Text style={styles.text}>{cartItem.quantity}</Text>
 
-              <TouchableOpacity
-                style={[styles.button, styles.buttonOutline]}
-                onPress={handleAdd}
-              >
-                <Text style={styles.buttonText}>+</Text>
-              </TouchableOpacity>
-            </View>
-          )}
-        </View>
+            <TouchableOpacity
+              onPress={handleAdd}
+              style={[
+                styles.card,
+                {
+                  paddingVertical: 8,
+                  paddingHorizontal: 16,
+                  borderRadius: 6,
+                  minWidth: 44,
+                  alignItems: "center",
+                  padding: 8,
+                },
+              ]}
+            >
+              <Text style={[styles.text, { fontSize: 16, fontWeight: "600" }]}>
+                +
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </View>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  card: {
-    width: "100%",
-    backgroundColor: "white",
-    borderRadius: 8,
-    overflow: "hidden",
-    marginBottom: 12,
-    elevation: 2, // sombra android
-    shadowColor: "#000", // sombra ios
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-    shadowOffset: { width: 0, height: 2 },
-  },
-  cardHeader: {
-    padding: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: "#ddd",
-  },
-  cardContent: {
-    padding: 12,
-  },
-  boldText: {
-    fontWeight: "700",
-    fontSize: 16,
-    color: "#111",
-  },
-  description: {
-    marginBottom: 8,
-    fontSize: 14,
-    color: "#444",
-  },
-  price: {
-    marginBottom: 16,
-    fontSize: 14,
-    color: "#111",
-  },
-  actions: {
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  button: {
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 6,
-  },
-  buttonPrimary: {
-    backgroundColor: "#16a34a", // green-600
-  },
-  buttonOutline: {
-    borderWidth: 1,
-    borderColor: "#16a34a",
-    backgroundColor: "transparent",
-  },
-  buttonText: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#16a34a",
-    textAlign: "center",
-  },
-  buttonTextPrimary: {
-    color: "white",
-  },
-  quantityControl: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 16, // gap não funciona no RN, substitua por marginRight no botão e marginHorizontal no texto
-  },
-  quantity: {
-    fontSize: 18,
-    fontWeight: "700",
-    marginHorizontal: 12,
-  },
-});
