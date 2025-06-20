@@ -6,9 +6,9 @@ import React, {
   useEffect,
   useCallback,
 } from "react";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Alert } from "react-native";
 import { Dish } from "../domain/dish";
+import { storageService } from "../services/storage";
 
 export type CartItem = Dish & {
   quantity: number;
@@ -28,8 +28,6 @@ interface CartContextData {
   hasItems: boolean;
 }
 
-const CART_STORAGE_KEY = "@smart-menu:cart";
-
 const CartContext = createContext({} as CartContextData);
 
 export function CartProvider({ children }: { children: ReactNode }) {
@@ -42,9 +40,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const loadCart = async () => {
     try {
-      const storedCart = await AsyncStorage.getItem(CART_STORAGE_KEY);
+      const storedCart = await storageService.getCart();
       if (storedCart) {
-        setCartItems(JSON.parse(storedCart));
+        setCartItems(storedCart);
       }
     } catch (error) {
       console.error("Erro ao carregar carrinho:", error);
@@ -58,7 +56,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   // Salva o carrinho sempre que mudar
   const saveCart = useCallback(async (items: CartItem[]) => {
     try {
-      await AsyncStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
+      await storageService.setCart(items);
     } catch (error) {
       console.error("Erro ao salvar carrinho:", error);
       Alert.alert(

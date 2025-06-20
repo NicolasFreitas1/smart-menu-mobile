@@ -1,175 +1,311 @@
-import { View, Text, ScrollView, ActivityIndicator } from "react-native";
-import { useCallback, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  FlatList,
+  StyleSheet,
+  ActivityIndicator,
+  RefreshControl,
+  TouchableOpacity,
+} from "react-native";
 import { useGlobalStyles } from "../../theme/hooks";
-import { useRestaurant } from "../../context/RestaurantContext";
 import { Dish } from "../../domain/dish";
-import { CategoryFilter } from "../../components/ui/category-filter";
+import { Category } from "../../domain/category";
 import { DishItem } from "../../components/dish-item";
-import { SafeContainer } from "../../components/ui/safe-container";
+import { CategoryFilter } from "../../components/ui/category-filter";
 import { FilterInfo } from "../../components/ui/filter-info";
-import { getCategories, getRestaurantDishes } from "../../services/restaurant";
 import { useMenuFilters } from "../../hooks/use-menu-filters";
+import { useRestaurant } from "../../context/RestaurantContext";
+import { restaurantService } from "../../services/restaurant";
 
-interface DataWithPagination<T> {
-  data: T[];
-  total: number;
-  currentPage: number;
-  lastPage: number;
-  perPage: number;
+interface MenuScreenState {
+  dishes: Dish[];
+  categories: Category[];
+  isLoading: boolean;
+  error: string | null;
+  selectedCategory: string;
+  dishesCount: number;
+  hasActiveFilters: boolean | undefined;
 }
 
 export function MenuScreen() {
-  const styles = useGlobalStyles();
-  const { restaurantId } = useRestaurant();
-  const { filters, setCategoryFilter, hasActiveFilters, resetFilters } =
-    useMenuFilters();
+  const globalStyles = useGlobalStyles();
+  const { restaurant } = useRestaurant();
+  const { filters, updateFilters, resetFilters } = useMenuFilters();
+  const [state, setState] = useState<MenuScreenState>({
+    dishes: [],
+    categories: [],
+    isLoading: true,
+    error: null,
+    selectedCategory: "Todas",
+    dishesCount: 0,
+    hasActiveFilters: undefined,
+  });
 
-  const [dishes, setDishes] = useState<DataWithPagination<Dish> | undefined>(
-    undefined
-  );
-  const [categories, setCategories] = useState<string[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  // Log do estado do restaurante
+  console.log("🏪 Restaurant state:", {
+    restaurant: restaurant?.id,
+    restaurantName: restaurant?.name,
+  });
 
-  const fetchDishes = useCallback(async () => {
-    if (!restaurantId) {
-      console.log("No restaurantId, skipping fetch");
+  // Carregar categorias
+  const fetchCategories = async () => {
+    try {
+      console.log("🔄 Fetching categories...");
+      const result = await restaurantService.getCategories();
+      setState((prev) => ({
+        ...prev,
+        categories: result,
+        error: null,
+      }));
+      console.log("✅ Categories loaded:", result.length);
+    } catch (error) {
+      console.error("❌ Error fetching categories:", error);
+      setState((prev) => ({
+        ...prev,
+        error: "Erro ao carregar categorias",
+        isLoading: false,
+      }));
+    }
+  };
+
+  // Carregar pratos
+  const fetchDishes = async () => {
+    if (!restaurant) {
+      console.log("⚠️ No restaurant found, setting loading to false");
+      setState((prev) => ({
+        ...prev,
+        isLoading: false,
+        error: "Restaurante não encontrado",
+      }));
       return;
     }
 
-    console.log(
-      "🔄 Fetching dishes with filters:",
-      JSON.stringify(filters, null, 2)
-    );
-    setIsLoading(true);
-
     try {
+      console.log("🔄 Fetching dishes with filters:", filters);
+      console.log("🏪 Restaurant ID:", restaurant.id);
+
       const params = {
-        restaurantId,
-        categoryFilter: filters.categoryFilter,
-        page: filters.page,
-        per_page: filters.perPage,
+        restaurantId: restaurant.id,
       };
+      console.log("📡 API params:", params);
 
-      console.log("📡 API params:", JSON.stringify(params, null, 2));
+      const dishes = await restaurantService.getDishes(restaurant.id, filters);
+      console.log("🍽️ Received dishes:", dishes.length, "dishes");
 
-      const response = await getRestaurantDishes(params);
+      setState((prev) => ({
+        ...prev,
+        dishes,
+        dishesCount: dishes.length,
+        isLoading: false,
+        error: null,
+      }));
 
-      console.log("✅ Dishes response:", {
-        total: response.total,
-        currentPage: response.currentPage,
-        lastPage: response.lastPage,
-        dataLength: response.data.length,
-      });
-
-      setDishes(response);
+      console.log("✅ Dishes loaded:", dishes.length);
+      console.log("📊 Updated state dishes count:", dishes.length);
     } catch (error) {
       console.error("❌ Error fetching dishes:", error);
-    } finally {
-      setIsLoading(false);
+      setState((prev) => ({
+        ...prev,
+        isLoading: false,
+        error: "Erro ao carregar pratos",
+      }));
     }
-  }, [restaurantId, filters]);
+  };
 
-  const fetchCategories = useCallback(async () => {
+  // Carregar dados iniciais
+  const loadInitialData = async () => {
+    console.log("🏁 Initial load - fetching categories");
+    setState((prev) => ({ ...prev, isLoading: true, error: null }));
+
     try {
-      console.log("🔄 Fetching categories...");
-      const result = await getCategories();
-      const names = result.map((cat) => cat.name);
-      setCategories(names);
-      console.log("✅ Categories loaded:", names);
+      await fetchCategories();
+      await fetchDishes();
     } catch (error) {
-      console.error("❌ Error fetching categories:", error);
+      console.error("❌ Error in loadInitialData:", error);
+      setState((prev) => ({
+        ...prev,
+        isLoading: false,
+        error: "Erro ao carregar dados iniciais",
+      }));
     }
+  };
+
+  // Recarregar dados
+  const refreshData = async () => {
+    await loadInitialData();
+  };
+
+  // Mudança de categoria
+  const handleCategoryChange = (categoryName: string) => {
+    console.log("🎯 Category changed to:", categoryName);
+    setState((prev) => ({ ...prev, selectedCategory: categoryName }));
+
+    if (categoryName === "Todas") {
+      // Limpar filtros de categoria
+      console.log("🗑️ Clearing category filters");
+      updateFilters({ selectedCategories: [] });
+    } else {
+      // Usar o nome da categoria diretamente
+      console.log("✅ Updating filters with category name:", categoryName);
+      updateFilters({ selectedCategories: [categoryName] });
+    }
+  };
+
+  // Efeito para carregar dados iniciais
+  useEffect(() => {
+    loadInitialData();
   }, []);
 
+  // Efeito para recarregar pratos quando filtros mudarem
   useEffect(() => {
-    console.log("🏁 Initial load - fetching categories");
-    fetchCategories();
-  }, [fetchCategories]);
+    console.log("🔄 useEffect triggered - filters changed");
+    console.log("📊 Current filters:", filters);
+    console.log("🔄 isLoading state:", state.isLoading);
 
-  useEffect(() => {
-    console.log("🔄 Filters changed, fetching dishes...");
-    fetchDishes();
-  }, [fetchDishes]);
+    if (!state.isLoading) {
+      console.log("🔄 Filters changed, fetching dishes...");
+      fetchDishes();
+    } else {
+      console.log("⏳ Skipping fetchDishes because isLoading is true");
+    }
+  }, [filters.selectedCategories, filters.priceRange, filters.sortBy]);
 
-  const handleCategorySelect = useCallback(
-    (category: string) => {
-      console.log("🎯 Category selected:", category);
-      setCategoryFilter(category);
-    },
-    [setCategoryFilter]
+  // Renderizar item do prato
+  const renderDishItem = ({ item }: { item: Dish }) => (
+    <DishItem
+      id={item.id}
+      name={item.name}
+      description={item.description}
+      price={item.price}
+    />
   );
 
-  const selectedCategory = filters.categoryFilter || "Todas";
+  // Renderizar cabeçalho da lista
+  const renderHeader = () => (
+    <View style={styles.header}>
+      <View style={styles.titleSection}>
+        <Text style={[globalStyles.title, styles.title]}>Cardápio</Text>
+        <Text style={[globalStyles.mutedText, styles.subtitle]}>
+          Explore os pratos disponíveis no cardápio do restaurante. Escolha seus
+          favoritos e adicione ao carrinho para fazer seu pedido.
+        </Text>
+      </View>
 
-  console.log("📊 Current state:", {
-    selectedCategory,
-    hasActiveFilters,
-    dishesCount: dishes?.data.length || 0,
-    isLoading,
-  });
+      <CategoryFilter
+        categories={state.categories.map((cat) => cat.name)}
+        selected={state.selectedCategory}
+        onSelect={handleCategoryChange}
+      />
+      <FilterInfo
+        totalItems={state.dishesCount}
+        currentPage={1}
+        lastPage={1}
+        hasActiveFilters={state.hasActiveFilters || false}
+        onResetFilters={resetFilters}
+        selectedCategory={state.selectedCategory}
+      />
+    </View>
+  );
 
-  if (isLoading) {
+  // Renderizar estado de carregamento
+  if (state.isLoading) {
     return (
-      <SafeContainer style={{ justifyContent: "center" }}>
+      <View
+        style={[globalStyles.screenContainer, { justifyContent: "center" }]}
+      >
         <ActivityIndicator size="large" />
-      </SafeContainer>
+        <Text
+          style={[globalStyles.text, { textAlign: "center", marginTop: 16 }]}
+        >
+          Carregando menu...
+        </Text>
+      </View>
     );
   }
 
-  return (
-    <SafeContainer>
-      <View style={{ paddingTop: 16 }}>
-        <View
-          style={{
-            alignItems: "center",
-            gap: 8,
-            paddingHorizontal: 16,
-            marginBottom: 24,
-          }}
-        >
-          <Text style={[styles.text, { fontSize: 24, fontWeight: "700" }]}>
-            Cardápio
-          </Text>
-          <Text style={[styles.mutedText, { textAlign: "center" }]}>
-            Explore os pratos disponíveis no cardápio do restaurante. Escolha
-            seus favoritos e adicione ao carrinho para fazer seu pedido.
-          </Text>
-        </View>
-
-        <CategoryFilter
-          categories={categories}
-          selected={selectedCategory}
-          onSelect={handleCategorySelect}
-        />
-
-        {dishes && (
-          <FilterInfo
-            totalItems={dishes.total}
-            currentPage={dishes.currentPage}
-            lastPage={dishes.lastPage}
-            hasActiveFilters={hasActiveFilters}
-            onResetFilters={resetFilters}
-            selectedCategory={selectedCategory}
-          />
-        )}
-      </View>
-
-      <ScrollView
-        style={{ flex: 1, width: "100%" }}
-        contentContainerStyle={{ paddingTop: 8 }}
+  // Renderizar estado de erro
+  if (state.error) {
+    return (
+      <View
+        style={[globalStyles.screenContainer, { justifyContent: "center" }]}
       >
-        <View style={{ gap: 16, padding: 16, paddingTop: 8 }}>
-          {dishes?.data.map((dish) => (
-            <DishItem
-              key={dish.id}
-              id={dish.id}
-              name={dish.name}
-              description={dish.description}
-              price={dish.price}
-            />
-          ))}
-        </View>
-      </ScrollView>
-    </SafeContainer>
+        <Text
+          style={[globalStyles.text, { textAlign: "center", color: "red" }]}
+        >
+          {state.error}
+        </Text>
+        <Text
+          style={[
+            globalStyles.text,
+            {
+              textAlign: "center",
+              marginTop: 8,
+              textDecorationLine: "underline",
+            },
+          ]}
+          onPress={refreshData}
+        >
+          Tentar novamente
+        </Text>
+      </View>
+    );
+  }
+
+  // Log do estado atual
+  console.log("📊 Current state:", {
+    dishesCount: state.dishesCount,
+    hasActiveFilters: state.hasActiveFilters,
+    isLoading: state.isLoading,
+    selectedCategory: state.selectedCategory,
+  });
+
+  return (
+    <View style={globalStyles.screenContainer}>
+      <FlatList
+        data={state.dishes}
+        renderItem={renderDishItem}
+        keyExtractor={(item) => item.id}
+        ListHeaderComponent={renderHeader}
+        refreshControl={
+          <RefreshControl
+            refreshing={state.isLoading}
+            onRefresh={refreshData}
+          />
+        }
+        contentContainerStyle={styles.listContainer}
+        showsVerticalScrollIndicator={false}
+        ItemSeparatorComponent={() => <View style={styles.separator} />}
+      />
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  header: {
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 16,
+  },
+  listContainer: {
+    paddingHorizontal: 16,
+    paddingBottom: 20,
+  },
+  separator: {
+    height: 16,
+  },
+  titleSection: {
+    marginBottom: 16,
+    alignItems: "center",
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "bold",
+    marginBottom: 8,
+    textAlign: "center",
+  },
+  subtitle: {
+    textAlign: "center",
+    lineHeight: 20,
+  },
+});

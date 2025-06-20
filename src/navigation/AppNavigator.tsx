@@ -8,13 +8,11 @@ import { MenuScreen } from "../pages/menu/MenuScreen";
 import { AssistantScreen } from "../pages/AssistantScreen";
 import { SurpriseMeScreen } from "../pages/surprise-me/SurpriseMeScreen";
 import { CartScreen } from "../pages/cart/CartScreen";
-import { useGlobalStyles } from "../theme/hooks";
 import { useTheme } from "../theme/theme-provider";
 
 const Tab = createBottomTabNavigator();
 
 export function AppNavigator() {
-  const styles = useGlobalStyles();
   const { colors, isDark } = useTheme();
 
   return (
@@ -28,6 +26,12 @@ export function AppNavigator() {
           borderTopWidth: 1,
           borderTopColor: colors.border,
           backgroundColor: colors.card,
+          paddingBottom: 8,
+          paddingTop: 8,
+        },
+        tabBarIconStyle: {
+          justifyContent: "center",
+          alignItems: "center",
         },
       }}
     >
@@ -40,6 +44,7 @@ export function AppNavigator() {
               name="home"
               size={24}
               color={focused ? colors.primary : colors.mutedForeground}
+              style={{ textAlignVertical: "center" }}
             />
           ),
         }}
@@ -53,6 +58,7 @@ export function AppNavigator() {
               name="utensils"
               size={22}
               color={focused ? colors.primary : colors.mutedForeground}
+              style={{ textAlignVertical: "center" }}
             />
           ),
         }}
@@ -94,6 +100,7 @@ export function AppNavigator() {
               name="dice-multiple"
               size={24}
               color={focused ? colors.primary : colors.mutedForeground}
+              style={{ textAlignVertical: "center" }}
             />
           ),
         }}
@@ -107,6 +114,7 @@ export function AppNavigator() {
               name="shopping-cart"
               size={24}
               color={focused ? colors.primary : colors.mutedForeground}
+              style={{ textAlignVertical: "center" }}
             />
           ),
         }}

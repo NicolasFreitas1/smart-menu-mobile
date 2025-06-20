@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { StatusBar } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -6,6 +6,9 @@ import { AppNavigator } from "./navigation/AppNavigator";
 import { ThemeProvider, useTheme } from "./theme/theme-provider";
 import { RestaurantProvider } from "./context/RestaurantContext";
 import { CartProvider } from "./context/CartContext";
+import { AuthProvider } from "./context/AuthContext";
+import { databaseService } from "./services/database";
+import { getRestaurantId } from "./config/app-config";
 
 function AppContent() {
   const { isDark, colors } = useTheme();
@@ -54,16 +57,42 @@ function AppContent() {
 }
 
 export default function App() {
-  const restaurantId = "4a94dbcc-b9b7-470c-9a47-c61062f66579";
+  const [isDatabaseReady, setIsDatabaseReady] = useState(false);
+  const [databaseError, setDatabaseError] = useState<string | null>(null);
+
+  useEffect(() => {
+    initializeDatabase();
+  }, []);
+
+  const initializeDatabase = async () => {
+    try {
+      await databaseService.init();
+      setIsDatabaseReady(true);
+      console.log("Aplicação inicializada com sucesso");
+    } catch (error) {
+      console.error("Erro ao inicializar banco de dados:", error);
+      setDatabaseError(
+        error instanceof Error ? error.message : "Erro desconhecido"
+      );
+      // Mesmo com erro no banco, a aplicação pode continuar funcionando
+      setIsDatabaseReady(true);
+    }
+  };
+
+  if (!isDatabaseReady) {
+    return null; // Ou um loading screen
+  }
 
   return (
     <SafeAreaProvider>
       <ThemeProvider>
-        <RestaurantProvider restaurantId={restaurantId}>
+        <AuthProvider>
           <CartProvider>
-            <AppContent />
+            <RestaurantProvider restaurantId={getRestaurantId()}>
+              <AppContent />
+            </RestaurantProvider>
           </CartProvider>
-        </RestaurantProvider>
+        </AuthProvider>
       </ThemeProvider>
     </SafeAreaProvider>
   );

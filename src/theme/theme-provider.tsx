@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Appearance, ColorSchemeName, useColorScheme } from "react-native";
 import { ThemeType, ThemeColors, themeColors } from "./theme-config";
+import { storageService } from "../services/storage";
 
 interface ThemeContextType {
   theme: ThemeType;
@@ -11,8 +11,6 @@ interface ThemeContextType {
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
-
-const THEME_STORAGE_KEY = "@smart-menu:theme";
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const systemColorScheme = useColorScheme();
@@ -26,7 +24,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   // Carrega o tema salvo no AsyncStorage
   const loadSavedTheme = async () => {
     try {
-      const savedTheme = await AsyncStorage.getItem(THEME_STORAGE_KEY);
+      const savedTheme = await storageService.getTheme();
       if (
         savedTheme &&
         (savedTheme === "light" ||
@@ -43,7 +41,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   // Salva o tema no AsyncStorage
   const setTheme = async (newTheme: ThemeType) => {
     try {
-      await AsyncStorage.setItem(THEME_STORAGE_KEY, newTheme);
+      await storageService.setTheme(newTheme);
       setThemeState(newTheme);
     } catch (error) {
       console.error("Erro ao salvar tema:", error);

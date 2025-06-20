@@ -1,9 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { View, Text, ScrollView, ActivityIndicator, Alert } from "react-native";
-import {
-  getCategories,
-  getRandomDishFromRestaurant,
-} from "../../services/restaurant";
+import { restaurantService } from "../../services/restaurant";
 import { CategoryFilter } from "../../components/ui/category-filter";
 import { DishItem } from "../../components/dish-item";
 import { Button } from "../../components/ui/button";
@@ -11,9 +8,10 @@ import { useRestaurant } from "../../context/RestaurantContext";
 import { Dish } from "../../domain/dish";
 import { Category } from "../../domain/category";
 import { useGlobalStyles } from "../../theme/hooks";
+import { getRestaurantId } from "../../config/app-config";
 
 export function SurpriseMeScreen() {
-  const { restaurantId } = useRestaurant();
+  const { restaurant } = useRestaurant();
   const styles = useGlobalStyles();
 
   const [categories, setCategories] = useState<Category[]>([]);
@@ -24,7 +22,7 @@ export function SurpriseMeScreen() {
 
   const fetchCategories = useCallback(async () => {
     try {
-      const result = await getCategories();
+      const result = await restaurantService.getCategories();
       setCategories(result);
     } catch (error) {
       console.error("Erro ao buscar categorias:", error);
@@ -42,6 +40,8 @@ export function SurpriseMeScreen() {
 
   const handleNextStep = async () => {
     try {
+      const restaurantId = restaurant?.id || getRestaurantId();
+
       if (!restaurantId) {
         Alert.alert("Erro", "Restaurante não encontrado");
         return;
@@ -54,11 +54,25 @@ export function SurpriseMeScreen() {
 
       setIsLoading(true);
 
-      const random = await getRandomDishFromRestaurant({
-        restaurantId,
-        category: selectedCategory,
+      const dishes = await restaurantService.getDishes(restaurantId, {
+        categories: [selectedCategory],
+        priceRange: { min: 0, max: 1000 },
+        dietaryRestrictions: [],
+        sortBy: "name",
+        showFavoritesOnly: false,
       });
-      setRandomDish(random.dish);
+
+      if (dishes.length === 0) {
+        Alert.alert(
+          "Erro",
+          "Nenhum prato encontrado com a categoria selecionada!"
+        );
+        return;
+      }
+
+      // Escolher um prato aleatório
+      const random = dishes[Math.floor(Math.random() * dishes.length)];
+      setRandomDish(random);
       setStep(2);
     } catch (error) {
       console.log(error);
@@ -81,8 +95,12 @@ export function SurpriseMeScreen() {
 
   return (
     <ScrollView
-      style={[styles.screenContainer, { padding: 24, paddingTop: 40 }]}
-      contentContainerStyle={{ alignItems: "center" }}
+      style={styles.screenContainer}
+      contentContainerStyle={{
+        padding: 24,
+        paddingTop: 40,
+        alignItems: "center",
+      }}
     >
       {step === 1 && (
         <View style={{ width: "100%", alignItems: "center", gap: 24 }}>
@@ -121,7 +139,12 @@ export function SurpriseMeScreen() {
             Você foi surpreendido com:
           </Text>
 
-          <DishItem {...randomDish} />
+          <DishItem
+            id={randomDish.id}
+            name={randomDish.name}
+            description={randomDish.description}
+            price={randomDish.price}
+          />
 
           <Button
             title="Tentar novamente"

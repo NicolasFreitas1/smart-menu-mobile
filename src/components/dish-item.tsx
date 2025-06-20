@@ -4,6 +4,7 @@ import { useCart } from "../context/CartContext";
 import { useRestaurant } from "../context/RestaurantContext";
 import { useGlobalStyles } from "../theme/hooks";
 import { Button } from "./ui/button";
+import { FavoriteButton } from "./favorite-button";
 
 interface DishItemProps {
   id: string;
@@ -33,6 +34,13 @@ export function DishItem({ id, name, description, price }: DishItemProps) {
     removeFromCart(id);
   }
 
+  const handleFavoriteToggle = (isFavorite: boolean) => {
+    // Aqui você pode adicionar feedback visual ou sonoro
+    console.log(
+      `${name} ${isFavorite ? "adicionado aos" : "removido dos"} favoritos`
+    );
+  };
+
   return (
     <View
       style={[
@@ -46,16 +54,31 @@ export function DishItem({ id, name, description, price }: DishItemProps) {
         },
       ]}
     >
-      <View style={{ marginBottom: 12 }}>
-        <Text
-          style={[
-            styles.text,
-            { fontSize: 16, fontWeight: "600", marginBottom: 4 },
-          ]}
-        >
-          <Text style={{ fontWeight: "700" }}>Prato: </Text>
-          {name}
-        </Text>
+      <View
+        style={{
+          flexDirection: "row",
+          justifyContent: "space-between",
+          alignItems: "flex-start",
+          marginBottom: 12,
+        }}
+      >
+        <View style={{ flex: 1 }}>
+          <Text
+            style={[
+              styles.text,
+              { fontSize: 16, fontWeight: "600", marginBottom: 4 },
+            ]}
+          >
+            <Text style={{ fontWeight: "700" }}>Prato: </Text>
+            {name}
+          </Text>
+        </View>
+        <FavoriteButton
+          itemId={id}
+          itemType="dish"
+          size={28}
+          onToggle={handleFavoriteToggle}
+        />
       </View>
 
       <View style={{ marginBottom: 12 }}>

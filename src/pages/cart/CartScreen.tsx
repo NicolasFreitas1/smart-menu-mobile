@@ -10,17 +10,13 @@ import {
 } from "react-native";
 import { useGlobalStyles } from "../../theme/hooks";
 import { useCart } from "../../context/CartContext";
-import { Button } from "../../components/ui/button";
 import { formatCurrency } from "../../lib/format";
 
-// Função de alert que funciona tanto no mobile quanto no web
 const showAlert = (title: string, message: string, options?: any) => {
   if (Platform.OS === "web") {
     if (options && options.length > 1) {
-      // Para confirmações com múltiplas opções
       const result = window.confirm(`${title}\n\n${message}`);
       if (result) {
-        // Encontra a opção "destructive" ou a segunda opção
         const confirmOption =
           options.find((opt: any) => opt.style === "destructive") || options[1];
         if (confirmOption && confirmOption.onPress) {
@@ -28,7 +24,6 @@ const showAlert = (title: string, message: string, options?: any) => {
         }
       }
     } else {
-      // Para alertas simples
       window.alert(`${title}\n\n${message}`);
     }
   } else {
@@ -100,7 +95,6 @@ export function CartScreen() {
           text: "Finalizar",
           onPress: () => {
             console.log("🛒 Finalizando pedido...");
-            // Aqui você pode adicionar a lógica para finalizar o pedido
             showAlert(
               "Pedido Finalizado!",
               "Seu pedido foi enviado com sucesso! Em breve você receberá uma confirmação.",
@@ -109,7 +103,6 @@ export function CartScreen() {
                   text: "OK",
                   onPress: () => {
                     console.log("🛒 Limpando carrinho após finalizar...");
-                    // Limpa o carrinho após finalizar
                     clearCartDirectly();
                     console.log("🛒 Carrinho limpo após finalizar!");
                   },
@@ -141,6 +134,9 @@ export function CartScreen() {
     <View style={styles.screenContainer}>
       <View style={localStyles.header}>
         <Text style={[styles.title, localStyles.cartTitle]}>Seu Carrinho</Text>
+        <Text style={[styles.mutedText, localStyles.cartSubtitle]}>
+          Revise seus itens selecionados antes de finalizar o pedido
+        </Text>
       </View>
 
       <ScrollView
@@ -154,6 +150,7 @@ export function CartScreen() {
               key={item.id}
               style={[
                 styles.card,
+                localStyles.cartItem,
                 {
                   shadowColor: "#000",
                   shadowOffset: { width: 0, height: 2 },
@@ -295,24 +292,35 @@ const localStyles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 20,
     paddingTop: 8,
+    paddingHorizontal: 16,
   },
   cartTitle: {
     textAlign: "center",
     fontSize: 24,
     fontWeight: "700",
   },
+  cartSubtitle: {
+    textAlign: "center",
+    marginTop: 8,
+    lineHeight: 20,
+  },
   scrollView: {
     flex: 1,
   },
   scrollContent: {
+    paddingHorizontal: 16,
     paddingBottom: 20,
   },
   cartItemsContainer: {
     gap: 16,
   },
+  cartItem: {
+    marginBottom: 16,
+  },
   footer: {
     paddingTop: 20,
     paddingBottom: 16,
+    paddingHorizontal: 16,
     borderTopWidth: 1,
     borderTopColor: "#E2E8F0",
     backgroundColor: "transparent",
@@ -320,7 +328,6 @@ const localStyles = StyleSheet.create({
   totalContainer: {
     alignItems: "center",
     marginBottom: 20,
-    paddingHorizontal: 16,
   },
   totalLabel: {
     fontSize: 16,
@@ -336,7 +343,6 @@ const localStyles = StyleSheet.create({
   buttonContainer: {
     flexDirection: "row",
     gap: 12,
-    paddingHorizontal: 16,
   },
   testButton: {
     flex: 1,

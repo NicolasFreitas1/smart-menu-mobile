@@ -5,8 +5,8 @@ import React, {
   ReactNode,
   useEffect,
 } from "react";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { User } from "../domain/user";
+import { storageService } from "../services/storage";
 
 interface AuthContextData {
   isAuthenticated: boolean;
@@ -25,12 +25,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
 
   useEffect(() => {
     const loadStorageData = async () => {
-      const token = await AsyncStorage.getItem("token");
-      const storedUser = await AsyncStorage.getItem("user");
+      try {
+        const token = await storageService.getAuthToken();
+        const storedUser = await storageService.getUser();
 
-      if (token && storedUser) {
-        setIsAuthenticated(true);
-        setUser(JSON.parse(storedUser));
+        if (token && storedUser) {
+          setIsAuthenticated(true);
+          setUser(storedUser);
+        }
+      } catch (error) {
+        console.error("Erro ao carregar dados de autenticação:", error);
       }
     };
 
@@ -38,17 +42,26 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   }, []);
 
   const login = async (token: string, user: User) => {
-    await AsyncStorage.setItem("token", token);
-    await AsyncStorage.setItem("user", JSON.stringify(user));
-    setIsAuthenticated(true);
-    setUser(user);
+    try {
+      await storageService.setAuthToken(token);
+      await storageService.setUser(user);
+      setIsAuthenticated(true);
+      setUser(user);
+    } catch (error) {
+      console.error("Erro ao fazer login:", error);
+      throw error;
+    }
   };
 
   const logout = async () => {
-    await AsyncStorage.removeItem("token");
-    await AsyncStorage.removeItem("user");
-    setIsAuthenticated(false);
-    setUser(null);
+    try {
+      await storageService.clearAuth();
+      setIsAuthenticated(false);
+      setUser(null);
+    } catch (error) {
+      console.error("Erro ao fazer logout:", error);
+      throw error;
+    }
   };
 
   return (

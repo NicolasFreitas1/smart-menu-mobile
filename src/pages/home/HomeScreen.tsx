@@ -1,5 +1,12 @@
 import React from "react";
-import { View, Text, ActivityIndicator, StyleSheet } from "react-native";
+import {
+  View,
+  Text,
+  ActivityIndicator,
+  StyleSheet,
+  TouchableOpacity,
+} from "react-native";
+import Feather from "react-native-vector-icons/Feather";
 import { useTheme } from "../../theme/theme-provider";
 import { useRestaurant } from "../../context/RestaurantContext";
 import { useCart } from "../../context/CartContext";
@@ -8,10 +15,16 @@ import { CartResume } from "../../components/cart-resume";
 import { ThemeToggle } from "../../theme/theme-toggle";
 import { SafeContainer } from "../../components/ui/safe-container";
 
-export function HomeScreen() {
+export function HomeScreen({ navigation }: any) {
   const { colors } = useTheme();
   const { restaurant, isLoading } = useRestaurant();
   const { totalItems, totalPrice, hasItems } = useCart();
+
+  const handleSettingsPress = () => {
+    // Aqui você pode navegar para a tela de configurações
+    // navigation.navigate('Settings');
+    console.log("Navegar para configurações");
+  };
 
   if (isLoading) {
     return (
@@ -24,7 +37,12 @@ export function HomeScreen() {
   return (
     <SafeContainer>
       <View style={styles.header}>
-        <View style={{ flex: 1 }} />
+        <TouchableOpacity
+          style={styles.settingsButton}
+          onPress={handleSettingsPress}
+        >
+          <Feather name="settings" size={24} color={colors.mutedForeground} />
+        </TouchableOpacity>
         <ThemeToggle />
       </View>
 
@@ -73,10 +91,13 @@ export function HomeScreen() {
 const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
-    justifyContent: "flex-end",
+    justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: 24,
     paddingTop: 24,
+  },
+  settingsButton: {
+    padding: 8,
   },
   content: {
     flex: 1,
