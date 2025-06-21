@@ -8,7 +8,6 @@ import { RestaurantProvider } from "./context/RestaurantContext";
 import { CartProvider } from "./context/CartContext";
 import { AuthProvider } from "./context/AuthContext";
 import { databaseService } from "./services/database";
-import { getRestaurantId } from "./config/app-config";
 
 function AppContent() {
   const { isDark, colors } = useTheme();
@@ -88,7 +87,7 @@ export default function App() {
       <ThemeProvider>
         <AuthProvider>
           <CartProvider>
-            <RestaurantProvider restaurantId={getRestaurantId()}>
+            <RestaurantProvider>
               <AppContent />
             </RestaurantProvider>
           </CartProvider>

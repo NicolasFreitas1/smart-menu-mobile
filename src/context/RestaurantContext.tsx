@@ -19,6 +19,9 @@ interface RestaurantContextProps {
   restaurantHistory: any[];
   addToHistory: (restaurant: { id: string; name: string }) => Promise<void>;
   lastVisitedRestaurant?: string;
+  selectedRestaurant?: Restaurant | null;
+  saveSelectedRestaurant: (restaurant: Restaurant) => Promise<boolean>;
+  clearSelectedRestaurant: () => Promise<boolean>;
 }
 
 const RestaurantContext = createContext<RestaurantContextProps>({
@@ -27,6 +30,8 @@ const RestaurantContext = createContext<RestaurantContextProps>({
   refetchRestaurant: async () => {},
   restaurantHistory: [],
   addToHistory: async () => {},
+  saveSelectedRestaurant: async () => false,
+  clearSelectedRestaurant: async () => false,
 });
 
 export function useRestaurant() {
@@ -43,6 +48,8 @@ export function RestaurantProvider({
   restaurantId,
 }: RestaurantProviderProps) {
   const [restaurant, setRestaurant] = useState<Restaurant | undefined>();
+  const [selectedRestaurant, setSelectedRestaurant] =
+    useState<Restaurant | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [restaurantHistory, setRestaurantHistory] = useState<any[]>([]);
   const [lastVisitedRestaurant, setLastVisitedRestaurant] = useState<
@@ -58,6 +65,7 @@ export function RestaurantProvider({
     try {
       const history = await storageService.getRestaurantHistory();
       const lastVisited = await storageService.getLastVisitedRestaurant();
+      const savedRestaurant = await storageService.getSelectedRestaurant();
 
       if (history) {
         setRestaurantHistory(history);
@@ -66,13 +74,22 @@ export function RestaurantProvider({
       if (lastVisited) {
         setLastVisitedRestaurant(lastVisited);
       }
+
+      if (savedRestaurant) {
+        setSelectedRestaurant(savedRestaurant);
+        // Usa o restaurante salvo como restaurante principal
+        setRestaurant(savedRestaurant);
+      }
     } catch (error) {
       console.error("Erro ao carregar dados locais:", error);
     }
   };
 
   const fetchRestaurant = async () => {
-    if (!restaurantId) {
+    // Se não há restaurante salvo, usa o ID configurado
+    const targetRestaurantId = selectedRestaurant?.id || restaurantId;
+
+    if (!targetRestaurantId) {
       setIsLoading(false);
       return;
     }
@@ -81,7 +98,7 @@ export function RestaurantProvider({
 
     try {
       const fetchedRestaurant = await restaurantService.getRestaurant(
-        restaurantId
+        targetRestaurantId
       );
 
       if (fetchedRestaurant && fetchedRestaurant.id) {
@@ -131,7 +148,7 @@ export function RestaurantProvider({
 
   useEffect(() => {
     fetchRestaurant();
-  }, [restaurantId]);
+  }, [selectedRestaurant, restaurantId]);
 
   const addToHistory = async (restaurant: { id: string; name: string }) => {
     try {
@@ -146,14 +163,43 @@ export function RestaurantProvider({
     }
   };
 
+  const saveSelectedRestaurant = async (restaurant: Restaurant) => {
+    try {
+      await storageService.setSelectedRestaurant(restaurant);
+      setSelectedRestaurant(restaurant);
+      setRestaurant(restaurant);
+      console.log("🏪 Restaurante salvo no contexto:", restaurant.name);
+      return true;
+    } catch (error) {
+      console.error("Erro ao salvar restaurante no contexto:", error);
+      return false;
+    }
+  };
+
+  const clearSelectedRestaurant = async () => {
+    try {
+      await storageService.clearSelectedRestaurant();
+      setSelectedRestaurant(null);
+      setRestaurant(undefined);
+      console.log("🏪 Restaurante removido do contexto");
+      return true;
+    } catch (error) {
+      console.error("Erro ao remover restaurante do contexto:", error);
+      return false;
+    }
+  };
+
   const contextValue: RestaurantContextProps = {
     restaurant,
-    restaurantId,
+    restaurantId: selectedRestaurant?.id || restaurantId,
     isLoading,
     refetchRestaurant: fetchRestaurant,
     restaurantHistory,
     addToHistory,
     lastVisitedRestaurant,
+    selectedRestaurant,
+    saveSelectedRestaurant,
+    clearSelectedRestaurant,
   };
 
   return (

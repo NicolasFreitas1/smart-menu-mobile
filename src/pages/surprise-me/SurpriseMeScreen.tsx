@@ -64,15 +64,12 @@ export function SurpriseMeScreen() {
 
       setIsLoading(true);
 
-      const dishes = await restaurantService.getDishes(restaurantId, {
-        categories: [selectedCategory],
-        priceRange: { min: 0, max: 1000 },
-        dietaryRestrictions: [],
-        sortBy: "name",
-        showFavoritesOnly: false,
-      });
+      const randomDishResult = await restaurantService.getRandomDish(
+        restaurantId,
+        selectedCategory
+      );
 
-      if (dishes.length === 0) {
+      if (!randomDishResult) {
         Alert.alert(
           "Erro",
           "Nenhum prato encontrado com a categoria selecionada!"
@@ -80,9 +77,7 @@ export function SurpriseMeScreen() {
         return;
       }
 
-      // Escolher um prato aleatório
-      const random = dishes[Math.floor(Math.random() * dishes.length)];
-      setRandomDish(random);
+      setRandomDish(randomDishResult);
       setStep(2);
     } catch (error) {
       console.log(error);

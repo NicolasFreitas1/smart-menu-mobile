@@ -8,8 +8,80 @@ const mockRestaurant: Restaurant = {
   id: "restaurant-1",
   name: "Restaurante Exemplo",
   addressId: "address-1",
+  address: {
+    id: "address-1",
+    cep: "12345-678",
+    street: "Rua das Flores",
+    number: "123",
+    city: "São Paulo",
+    state: "SP",
+    country: "Brasil",
+  },
   createdAt: new Date(),
 };
+
+const mockRestaurants: Restaurant[] = [
+  {
+    id: "restaurant-1",
+    name: "Restaurante Italiano",
+    addressId: "address-1",
+    address: {
+      id: "address-1",
+      cep: "01234-567",
+      street: "Rua das Pizzas",
+      number: "456",
+      city: "São Paulo",
+      state: "SP",
+      country: "Brasil",
+    },
+    createdAt: new Date(),
+  },
+  {
+    id: "restaurant-2", 
+    name: "Pizzaria Express",
+    addressId: "address-2",
+    address: {
+      id: "address-2",
+      cep: "04567-890",
+      street: "Avenida dos Hambúrgueres",
+      number: "789",
+      city: "Rio de Janeiro",
+      state: "RJ",
+      country: "Brasil",
+    },
+    createdAt: new Date(),
+  },
+  {
+    id: "restaurant-3",
+    name: "Hamburgueria Gourmet",
+    addressId: "address-3",
+    address: {
+      id: "address-3",
+      cep: "07890-123",
+      street: "Rua dos Sushis",
+      number: "321",
+      city: "Belo Horizonte",
+      state: "MG",
+      country: "Brasil",
+    },
+    createdAt: new Date(),
+  },
+  {
+    id: "restaurant-4",
+    name: "Sushi Bar",
+    addressId: "address-4",
+    address: {
+      id: "address-4",
+      cep: "01111-222",
+      street: "Avenida das Massas",
+      number: "654",
+      city: "Curitiba",
+      state: "PR",
+      country: "Brasil",
+    },
+    createdAt: new Date(),
+  },
+];
 
 const mockCategories: Category[] = [
   { id: "1", name: "Pizza", createdAt: new Date() },
@@ -102,6 +174,56 @@ const simulateNetworkDelay = (ms: number = 500): Promise<void> => {
 };
 
 export const restaurantService = {
+  // Buscar todos os restaurantes
+  async getAllRestaurants(): Promise<Restaurant[]> {
+    try {
+      const apiAvailable = await isApiAvailable();
+
+      if (apiAvailable) {
+        const response = await api.get("/restaurants");
+
+        console.log("🏪 Raw API response:", response.data);
+        console.log("🏪 Response data type:", typeof response.data);
+        console.log("🏪 Response data keys:", Object.keys(response.data || {}));
+
+        // A API retorna { actualPage, amount, data: [...] }
+        let restaurants = [];
+        
+        if (response.data && response.data.data && Array.isArray(response.data.data)) {
+          // Formato: { actualPage, amount, data: [...] }
+          restaurants = response.data.data;
+          console.log("🏪 Using data.data format, found", restaurants.length, "restaurants");
+        } else if (response.data && Array.isArray(response.data)) {
+          // Formato: [...] (array direto)
+          restaurants = response.data;
+          console.log("🏪 Using direct array format, found", restaurants.length, "restaurants");
+        } else if (response.data && response.data.restaurants && Array.isArray(response.data.restaurants)) {
+          // Formato: { restaurants: [...] }
+          restaurants = response.data.restaurants;
+          console.log("🏪 Using data.restaurants format, found", restaurants.length, "restaurants");
+        } else {
+          console.warn("🏪 Unknown response format, using empty array");
+          restaurants = [];
+        }
+
+        console.log("🏪 Final restaurants array:", restaurants);
+        
+        return restaurants;
+      } else {
+        // Usar dados mock
+        await simulateNetworkDelay();
+        console.log("🏪 Using mock restaurants");
+        return mockRestaurants;
+      }
+    } catch (error) {
+      console.error("Erro ao buscar restaurantes:", error);
+      // Fallback para dados mock
+      await simulateNetworkDelay();
+      console.log("🏪 Using mock restaurants due to error");
+      return mockRestaurants;
+    }
+  },
+
   // Buscar informações do restaurante
   async getRestaurant(restaurantId: string): Promise<Restaurant> {
     try {
@@ -319,6 +441,68 @@ export const restaurantService = {
       // Fallback para dados mock
       await simulateNetworkDelay();
       return mockDishes.slice(0, limit);
+    }
+  },
+
+  // Buscar prato aleatório
+  async getRandomDish(
+    restaurantId: string,
+    category?: string
+  ): Promise<Dish | null> {
+    try {
+      const apiAvailable = await isApiAvailable();
+
+      if (apiAvailable) {
+        const params = new URLSearchParams();
+        if (category) {
+          params.append("category", category);
+        }
+
+        const queryString = params.toString();
+        const url = `/dishes/random/${restaurantId}${queryString ? `?${queryString}` : ""}`;
+        const response = await api.get(url);
+        
+        console.log("🎲 Random dish response:", response.data);
+        
+        // Extrair o prato da resposta que vem no formato {"dish": {...}}
+        const dish = response.data.dish || response.data;
+        return dish;
+      } else {
+        // Usar dados mock
+        await simulateNetworkDelay();
+        let availableDishes = [...mockDishes];
+        
+        if (category) {
+          availableDishes = availableDishes.filter((dish) => 
+            dish.categories?.includes(category)
+          );
+        }
+        
+        if (availableDishes.length === 0) {
+          return null;
+        }
+        
+        const randomIndex = Math.floor(Math.random() * availableDishes.length);
+        return availableDishes[randomIndex];
+      }
+    } catch (error) {
+      console.error("Erro ao buscar prato aleatório:", error);
+      // Fallback para dados mock
+      await simulateNetworkDelay();
+      let availableDishes = [...mockDishes];
+      
+      if (category) {
+        availableDishes = availableDishes.filter((dish) => 
+          dish.categories?.includes(category)
+        );
+      }
+      
+      if (availableDishes.length === 0) {
+        return null;
+      }
+      
+      const randomIndex = Math.floor(Math.random() * availableDishes.length);
+      return availableDishes[randomIndex];
     }
   },
 };

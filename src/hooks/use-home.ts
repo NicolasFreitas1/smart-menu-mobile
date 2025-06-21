@@ -1,15 +1,16 @@
 import { useCallback } from "react";
+import { useNavigation } from "@react-navigation/native";
 import { useRestaurant } from "../context/RestaurantContext";
 import { useCart } from "../context/CartContext";
 
 export function useHome() {
+  const navigation = useNavigation();
   const { restaurant, isLoading } = useRestaurant();
   const { totalItems, totalPrice, hasItems } = useCart();
 
   const handleSettingsPress = useCallback(() => {
-    // Aqui você pode navegar para a tela de configurações
-    console.log("Navegar para configurações");
-  }, []);
+    navigation.navigate("Settings" as never);
+  }, [navigation]);
 
   return {
     // State

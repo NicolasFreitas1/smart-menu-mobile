@@ -12,7 +12,6 @@ import { useTheme } from "../../theme/theme-provider";
 import { useUserPreferences } from "../../hooks/use-user-preferences";
 import { storageService } from "../../services/storage";
 import { SafeContainer } from "../../components/ui/safe-container";
-import { IPConfig } from "../../components/ui/ip-config";
 import { RestaurantConfig } from "../../components/ui/restaurant-config";
 import { populateSampleData, clearAllData } from "../../utils/sample-data";
 
@@ -158,7 +157,7 @@ export function SettingsScreen() {
         <View
           style={[styles.container, { backgroundColor: colors.background }]}
         >
-          <Text style={[styles.loadingText, { color: colors.text }]}>
+          <Text style={[styles.loadingText, { color: colors.foreground }]}>
             Carregando configurações...
           </Text>
         </View>
@@ -171,18 +170,20 @@ export function SettingsScreen() {
       <ScrollView
         style={[styles.container, { backgroundColor: colors.background }]}
       >
-        <Text style={[styles.title, { color: colors.text }]}>
+        <Text style={[styles.title, { color: colors.foreground }]}>
           Configurações
         </Text>
 
         {/* Seção de Tema */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>
+          <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
             Aparência
           </Text>
 
-          <View style={styles.settingItem}>
-            <Text style={[styles.settingLabel, { color: colors.text }]}>
+          <View
+            style={[styles.settingItem, { borderBottomColor: colors.border }]}
+          >
+            <Text style={[styles.settingLabel, { color: colors.foreground }]}>
               Tema
             </Text>
             <View style={styles.themeButtons}>
@@ -193,7 +194,7 @@ export function SettingsScreen() {
                     styles.themeButton,
                     {
                       backgroundColor:
-                        theme === themeOption ? colors.primary : colors.surface,
+                        theme === themeOption ? colors.primary : colors.card,
                       borderColor: colors.border,
                     },
                   ]}
@@ -205,8 +206,8 @@ export function SettingsScreen() {
                       {
                         color:
                           theme === themeOption
-                            ? colors.onPrimary
-                            : colors.text,
+                            ? colors.primaryForeground
+                            : colors.foreground,
                       },
                     ]}
                   >
@@ -222,12 +223,14 @@ export function SettingsScreen() {
 
         {/* Seção de Idioma */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>
+          <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
             Idioma
           </Text>
 
-          <View style={styles.settingItem}>
-            <Text style={[styles.settingLabel, { color: colors.text }]}>
+          <View
+            style={[styles.settingItem, { borderBottomColor: colors.border }]}
+          >
+            <Text style={[styles.settingLabel, { color: colors.foreground }]}>
               Idioma do App
             </Text>
             <View style={styles.languageButtons}>
@@ -244,7 +247,7 @@ export function SettingsScreen() {
                       backgroundColor:
                         preferences.language === lang.code
                           ? colors.primary
-                          : colors.surface,
+                          : colors.card,
                       borderColor: colors.border,
                     },
                   ]}
@@ -256,8 +259,8 @@ export function SettingsScreen() {
                       {
                         color:
                           preferences.language === lang.code
-                            ? colors.onPrimary
-                            : colors.text,
+                            ? colors.primaryForeground
+                            : colors.foreground,
                       },
                     ]}
                   >
@@ -271,12 +274,14 @@ export function SettingsScreen() {
 
         {/* Seção de Notificações */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>
+          <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
             Notificações
           </Text>
 
-          <View style={styles.settingItem}>
-            <Text style={[styles.settingLabel, { color: colors.text }]}>
+          <View
+            style={[styles.settingItem, { borderBottomColor: colors.border }]}
+          >
+            <Text style={[styles.settingLabel, { color: colors.foreground }]}>
               Atualizações de Pedidos
             </Text>
             <Switch
@@ -285,12 +290,14 @@ export function SettingsScreen() {
                 handleNotificationChange("orderUpdates", value)
               }
               trackColor={{ false: colors.border, true: colors.primary }}
-              thumbColor={colors.surface}
+              thumbColor={colors.card}
             />
           </View>
 
-          <View style={styles.settingItem}>
-            <Text style={[styles.settingLabel, { color: colors.text }]}>
+          <View
+            style={[styles.settingItem, { borderBottomColor: colors.border }]}
+          >
+            <Text style={[styles.settingLabel, { color: colors.foreground }]}>
               Promoções
             </Text>
             <Switch
@@ -299,12 +306,14 @@ export function SettingsScreen() {
                 handleNotificationChange("promotions", value)
               }
               trackColor={{ false: colors.border, true: colors.primary }}
-              thumbColor={colors.surface}
+              thumbColor={colors.card}
             />
           </View>
 
-          <View style={styles.settingItem}>
-            <Text style={[styles.settingLabel, { color: colors.text }]}>
+          <View
+            style={[styles.settingItem, { borderBottomColor: colors.border }]}
+          >
+            <Text style={[styles.settingLabel, { color: colors.foreground }]}>
               Novos Itens
             </Text>
             <Switch
@@ -313,22 +322,14 @@ export function SettingsScreen() {
                 handleNotificationChange("newItems", value)
               }
               trackColor={{ false: colors.border, true: colors.primary }}
-              thumbColor={colors.surface}
+              thumbColor={colors.card}
             />
           </View>
         </View>
 
-        {/* Seção de API */}
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>
-            Configuração da API
-          </Text>
-          <IPConfig />
-        </View>
-
         {/* Seção de Restaurante */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>
+          <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
             Restaurante
           </Text>
           <RestaurantConfig />
@@ -336,17 +337,19 @@ export function SettingsScreen() {
 
         {/* Seção de Dados */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>
+          <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
             Dados
           </Text>
 
           {storageInfo && (
-            <View style={styles.settingItem}>
-              <Text style={[styles.settingLabel, { color: colors.text }]}>
+            <View
+              style={[styles.settingItem, { borderBottomColor: colors.border }]}
+            >
+              <Text style={[styles.settingLabel, { color: colors.foreground }]}>
                 Uso de Armazenamento
               </Text>
               <Text
-                style={[styles.settingValue, { color: colors.textSecondary }]}
+                style={[styles.settingValue, { color: colors.mutedForeground }]}
               >
                 {Math.round((storageInfo.used / 1024 / 1024) * 100) / 100} MB /{" "}
                 {Math.round(storageInfo.total / 1024 / 1024)} MB
@@ -364,28 +367,34 @@ export function SettingsScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.dangerButton, { borderColor: colors.error }]}
+            style={[styles.dangerButton, { borderColor: colors.destructive }]}
             onPress={handleResetPreferences}
           >
-            <Text style={[styles.dangerButtonText, { color: colors.error }]}>
+            <Text
+              style={[styles.dangerButtonText, { color: colors.destructive }]}
+            >
               Resetar Preferências
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.dangerButton, { borderColor: colors.error }]}
+            style={[styles.dangerButton, { borderColor: colors.destructive }]}
             onPress={handleClearStorage}
           >
-            <Text style={[styles.dangerButtonText, { color: colors.error }]}>
+            <Text
+              style={[styles.dangerButtonText, { color: colors.destructive }]}
+            >
               Limpar Dados do AsyncStorage
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.dangerButton, { borderColor: colors.error }]}
+            style={[styles.dangerButton, { borderColor: colors.destructive }]}
             onPress={handleClearAllData}
           >
-            <Text style={[styles.dangerButtonText, { color: colors.error }]}>
+            <Text
+              style={[styles.dangerButtonText, { color: colors.destructive }]}
+            >
               Limpar TODOS os Dados
             </Text>
           </TouchableOpacity>
@@ -419,7 +428,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: "#e0e0e0",
   },
   settingLabel: {
     fontSize: 16,

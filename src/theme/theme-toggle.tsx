@@ -48,7 +48,7 @@ export function ThemeToggle() {
             <TouchableOpacity
               style={[
                 styles.option,
-                theme === "light" && styles.selectedOption,
+                theme === "light" && { backgroundColor: colors.muted },
               ]}
               onPress={() => handleSelect("light")}
             >
@@ -59,7 +59,10 @@ export function ThemeToggle() {
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[styles.option, theme === "dark" && styles.selectedOption]}
+              style={[
+                styles.option,
+                theme === "dark" && { backgroundColor: colors.muted },
+              ]}
               onPress={() => handleSelect("dark")}
             >
               <Icon name="moon" size={20} color={colors.foreground} />
@@ -71,7 +74,7 @@ export function ThemeToggle() {
             <TouchableOpacity
               style={[
                 styles.option,
-                theme === "system" && styles.selectedOption,
+                theme === "system" && { backgroundColor: colors.muted },
               ]}
               onPress={() => handleSelect("system")}
             >
@@ -114,9 +117,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 16,
     marginLeft: 12,
-  },
-  selectedOption: {
-    backgroundColor: "rgba(0, 0, 0, 0.05)",
   },
   optionText: {
     fontSize: 16,

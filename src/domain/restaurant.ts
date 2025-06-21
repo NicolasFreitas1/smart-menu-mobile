@@ -1,7 +1,18 @@
+export interface Address {
+  id: string;
+  cep: string;
+  street: string;
+  number: string;
+  city: string;
+  state: string;
+  country: string;
+}
+
 export interface Restaurant {
   id: string;
   name: string;
-  addressId: string;
-  createdAt: Date;
-  updatedAt?: Date | null;
+  addressId?: string;
+  address?: Address;
+  createdAt: Date | string;
+  updatedAt?: Date | string | null;
 }

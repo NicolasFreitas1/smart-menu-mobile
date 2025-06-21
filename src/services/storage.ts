@@ -9,6 +9,7 @@ export const STORAGE_KEYS = {
   RESTAURANT_HISTORY: "@smart-menu:restaurant:history",
   USER_PREFERENCES: "@smart-menu:user:preferences",
   LAST_VISITED_RESTAURANT: "@smart-menu:restaurant:last-visited",
+  SELECTED_RESTAURANT: "@smart-menu:restaurant:selected",
 } as const;
 
 // Tipos para os dados armazenados
@@ -191,6 +192,28 @@ class StorageService {
     }
 
     return this.setItem(STORAGE_KEYS.LAST_VISITED_RESTAURANT, restaurantId);
+  }
+
+  // Métodos específicos para restaurante selecionado
+  async getSelectedRestaurant(): Promise<any | null> {
+    return this.getItem<any>(STORAGE_KEYS.SELECTED_RESTAURANT);
+  }
+
+  async setSelectedRestaurant(restaurant: any): Promise<void> {
+    // Validação para garantir que o restaurante tem os campos necessários
+    if (!restaurant || !restaurant.id || !restaurant.name) {
+      console.warn(
+        "⚠️ Tentativa de salvar restaurante inválido:",
+        restaurant
+      );
+      return;
+    }
+
+    return this.setItem(STORAGE_KEYS.SELECTED_RESTAURANT, restaurant);
+  }
+
+  async clearSelectedRestaurant(): Promise<void> {
+    return this.removeItem(STORAGE_KEYS.SELECTED_RESTAURANT);
   }
 
   // Método para migração de dados (se necessário no futuro)
