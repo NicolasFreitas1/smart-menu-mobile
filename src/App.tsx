@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { StatusBar } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import { AppNavigator } from "./navigation/AppNavigator";
+import { MainNavigator } from "./navigation/MainNavigator";
 import { ThemeProvider, useTheme } from "./theme/theme-provider";
 import { RestaurantProvider } from "./context/RestaurantContext";
 import { CartProvider } from "./context/CartContext";
@@ -49,7 +49,7 @@ function AppContent() {
           },
         }}
       >
-        <AppNavigator />
+        <MainNavigator />
       </NavigationContainer>
     </>
   );

@@ -14,8 +14,9 @@ import { storageService } from "../../services/storage";
 import { SafeContainer } from "../../components/ui/safe-container";
 import { RestaurantConfig } from "../../components/ui/restaurant-config";
 import { populateSampleData, clearAllData } from "../../utils/sample-data";
+import { useAppInitialization } from "../../hooks/use-app-initialization";
 
-export function SettingsScreen() {
+export function SettingsScreen({ navigation }: any) {
   const { theme, setTheme, colors } = useTheme();
   const {
     preferences,
@@ -24,6 +25,7 @@ export function SettingsScreen() {
     setLanguage,
     resetPreferences,
   } = useUserPreferences();
+  const { resetRestaurantSelection } = useAppInitialization();
   const [storageInfo, setStorageInfo] = useState<{
     used: number;
     total: number;
@@ -144,6 +146,27 @@ export function SettingsScreen() {
               loadStorageInfo();
             } catch (error) {
               Alert.alert("Erro", "Não foi possível limpar todos os dados.");
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleChangeRestaurant = () => {
+    Alert.alert(
+      "Trocar Restaurante",
+      "Deseja trocar de restaurante? Você será redirecionado para a tela de seleção.",
+      [
+        { text: "Cancelar", style: "cancel" },
+        {
+          text: "Trocar",
+          onPress: async () => {
+            try {
+              await resetRestaurantSelection();
+              // A navegação será automática pelo MainNavigator
+            } catch (error) {
+              Alert.alert("Erro", "Não foi possível trocar de restaurante.");
             }
           },
         },
@@ -333,6 +356,15 @@ export function SettingsScreen() {
             Restaurante
           </Text>
           <RestaurantConfig />
+
+          <TouchableOpacity
+            style={[styles.actionButton, { borderColor: colors.primary }]}
+            onPress={handleChangeRestaurant}
+          >
+            <Text style={[styles.actionButtonText, { color: colors.primary }]}>
+              Trocar de Restaurante
+            </Text>
+          </TouchableOpacity>
         </View>
 
         {/* Seção de Dados */}

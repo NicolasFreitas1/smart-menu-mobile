@@ -22,6 +22,7 @@ interface RestaurantContextProps {
   selectedRestaurant?: Restaurant | null;
   saveSelectedRestaurant: (restaurant: Restaurant) => Promise<boolean>;
   clearSelectedRestaurant: () => Promise<boolean>;
+  setRestaurant: (restaurant: Restaurant | null) => void;
 }
 
 const RestaurantContext = createContext<RestaurantContextProps>({
@@ -32,6 +33,7 @@ const RestaurantContext = createContext<RestaurantContextProps>({
   addToHistory: async () => {},
   saveSelectedRestaurant: async () => false,
   clearSelectedRestaurant: async () => false,
+  setRestaurant: () => {},
 });
 
 export function useRestaurant() {
@@ -189,6 +191,16 @@ export function RestaurantProvider({
     }
   };
 
+  const setRestaurantDirectly = (restaurant: Restaurant | null) => {
+    if (restaurant) {
+      setRestaurant(restaurant);
+      setSelectedRestaurant(restaurant);
+    } else {
+      setRestaurant(undefined);
+      setSelectedRestaurant(null);
+    }
+  };
+
   const contextValue: RestaurantContextProps = {
     restaurant,
     restaurantId: selectedRestaurant?.id || restaurantId,
@@ -200,6 +212,7 @@ export function RestaurantProvider({
     selectedRestaurant,
     saveSelectedRestaurant,
     clearSelectedRestaurant,
+    setRestaurant: setRestaurantDirectly,
   };
 
   return (
