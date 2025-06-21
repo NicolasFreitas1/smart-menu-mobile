@@ -116,7 +116,7 @@ export function FavoriteButton({
       <Feather
         name={isFavorite ? "heart" : "heart"}
         size={size * 0.6}
-        color={isFavorite ? colors.error : colors.mutedForeground}
+        color={isFavorite ? colors.destructive : colors.mutedForeground}
         style={isFavorite ? styles.filledHeart : undefined}
       />
     </TouchableOpacity>

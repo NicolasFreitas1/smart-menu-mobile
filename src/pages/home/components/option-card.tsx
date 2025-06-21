@@ -25,7 +25,7 @@ export function OptionCard({ redirectTo, title, icon }: OptionCardProps) {
         },
       ]}
     >
-      <Icon name={icon} size={20} color={colors.mutedForeground} />
+      <Icon name={icon} size={24} color={colors.mutedForeground} />
       <Text
         style={[
           styles.title,
@@ -45,12 +45,13 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     padding: 24,
-    borderRadius: 8,
+    borderRadius: 12,
     borderWidth: 1,
-    gap: 8,
+    marginVertical: 8,
   },
   title: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: "600",
+    marginLeft: 12,
   },
 });

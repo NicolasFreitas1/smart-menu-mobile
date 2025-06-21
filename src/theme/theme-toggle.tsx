@@ -113,7 +113,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     padding: 16,
-    gap: 12,
+    marginLeft: 12,
   },
   selectedOption: {
     backgroundColor: "rgba(0, 0, 0, 0.05)",

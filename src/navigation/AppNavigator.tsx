@@ -5,7 +5,7 @@ import FontAwesome5 from "react-native-vector-icons/FontAwesome5";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import { HomeScreen } from "../pages/home/HomeScreen";
 import { MenuScreen } from "../pages/menu/MenuScreen";
-import { AssistantScreen } from "../pages/AssistantScreen";
+import { AssistantScreen } from "../pages/assistant/AssistantScreen";
 import { SurpriseMeScreen } from "../pages/surprise-me/SurpriseMeScreen";
 import { CartScreen } from "../pages/cart/CartScreen";
 import { useTheme } from "../theme/theme-provider";

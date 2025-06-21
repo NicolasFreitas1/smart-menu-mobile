@@ -3,6 +3,7 @@ import { formatCurrency } from "../lib/format";
 import { useCart } from "../context/CartContext";
 import { useRestaurant } from "../context/RestaurantContext";
 import { useGlobalStyles } from "../theme/hooks";
+import { useTheme } from "../theme/theme-provider";
 import { Button } from "./ui/button";
 import { FavoriteButton } from "./favorite-button";
 
@@ -17,6 +18,7 @@ export function DishItem({ id, name, description, price }: DishItemProps) {
   const { restaurantId } = useRestaurant();
   const { cartItems, addToCart, removeFromCart } = useCart();
   const styles = useGlobalStyles();
+  const { colors } = useTheme();
 
   const cartItem = cartItems.find((item) => item.id === id);
 
@@ -51,6 +53,8 @@ export function DishItem({ id, name, description, price }: DishItemProps) {
           shadowOpacity: 0.1,
           shadowRadius: 4,
           elevation: 3,
+          marginHorizontal: 16,
+          marginVertical: 8,
         },
       ]}
     >
@@ -59,14 +63,14 @@ export function DishItem({ id, name, description, price }: DishItemProps) {
           flexDirection: "row",
           justifyContent: "space-between",
           alignItems: "flex-start",
-          marginBottom: 12,
+          marginBottom: 16,
         }}
       >
         <View style={{ flex: 1 }}>
           <Text
             style={[
               styles.text,
-              { fontSize: 16, fontWeight: "600", marginBottom: 4 },
+              { fontSize: 18, fontWeight: "600", marginBottom: 8 },
             ]}
           >
             <Text style={{ fontWeight: "700" }}>Prato: </Text>
@@ -81,14 +85,14 @@ export function DishItem({ id, name, description, price }: DishItemProps) {
         />
       </View>
 
-      <View style={{ marginBottom: 12 }}>
-        <Text style={[styles.mutedText, { lineHeight: 20 }]}>
+      <View style={{ marginBottom: 16 }}>
+        <Text style={[styles.mutedText, { lineHeight: 22 }]}>
           <Text style={{ fontWeight: "700" }}>Descrição: </Text>
           {description}
         </Text>
       </View>
 
-      <Text style={[styles.text, { marginBottom: 16 }]}>
+      <Text style={[styles.text, { marginBottom: 20, fontSize: 18 }]}>
         <Text style={{ fontWeight: "700" }}>Preço: </Text>
         {formatCurrency(price)}
       </Text>
@@ -98,10 +102,16 @@ export function DishItem({ id, name, description, price }: DishItemProps) {
           <Button
             title="Selecionar"
             onPress={handleAdd}
-            style={{ minWidth: 120 }}
+            style={{ minWidth: 140 }}
           />
         ) : (
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 16 }}>
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              marginHorizontal: 8,
+            }}
+          >
             <TouchableOpacity
               onPress={handleRemove}
               style={[
@@ -121,7 +131,14 @@ export function DishItem({ id, name, description, price }: DishItemProps) {
               </Text>
             </TouchableOpacity>
 
-            <Text style={styles.text}>{cartItem.quantity}</Text>
+            <Text
+              style={[
+                styles.text,
+                { marginHorizontal: 16, fontSize: 18, fontWeight: "600" },
+              ]}
+            >
+              {cartItem.quantity}
+            </Text>
 
             <TouchableOpacity
               onPress={handleAdd}

@@ -42,15 +42,18 @@ export function CategoryFilter({
         style={{
           flexDirection: "row",
           flexWrap: "wrap",
-          gap: 8,
           justifyContent: "center",
+          marginHorizontal: 4,
         }}
       >
         {allCategories.map((category) => (
           <TouchableOpacity
             key={category}
             onPress={() => onSelect(category)}
-            style={getButtonStyle(selected === category)}
+            style={[
+              getButtonStyle(selected === category),
+              { marginHorizontal: 4, marginVertical: 4 },
+            ]}
           >
             <Text style={getTextStyle(selected === category)}>{category}</Text>
           </TouchableOpacity>
@@ -65,7 +68,7 @@ export function CategoryFilter({
       showsHorizontalScrollIndicator={false}
       contentContainerStyle={{
         paddingHorizontal: 16,
-        gap: 8,
+        marginHorizontal: 4,
         alignItems: "center",
         height: 40,
       }}
@@ -74,7 +77,10 @@ export function CategoryFilter({
         <TouchableOpacity
           key={category}
           onPress={() => onSelect(category)}
-          style={getButtonStyle(selected === category)}
+          style={[
+            getButtonStyle(selected === category),
+            { marginHorizontal: 4 },
+          ]}
         >
           <Text style={getTextStyle(selected === category)}>{category}</Text>
         </TouchableOpacity>

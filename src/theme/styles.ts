@@ -60,7 +60,7 @@ export const createGlobalStyles = (colors: ThemeColors) =>
 
     // Listas
     list: {
-      gap: 12,
+      marginVertical: 6,
     },
     listItem: {
       flexDirection: "row",

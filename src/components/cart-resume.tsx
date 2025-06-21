@@ -100,12 +100,12 @@ const styles = StyleSheet.create({
   leftContent: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    marginRight: 8,
   },
   rightContent: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 4,
+    marginLeft: 4,
   },
   badge: {
     paddingHorizontal: 8,
