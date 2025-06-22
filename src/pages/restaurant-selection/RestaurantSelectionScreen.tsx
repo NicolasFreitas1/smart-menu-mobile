@@ -15,6 +15,7 @@ import { SafeContainer } from "../../components/ui/safe-container";
 import { Restaurant } from "../../domain/restaurant";
 import { restaurantService } from "../../services/restaurant";
 import { useRestaurant } from "../../context/RestaurantContext";
+import { useLocation } from "../../hooks/use-location";
 import { ThemeToggle } from "../../theme/theme-toggle";
 import Icon from "react-native-vector-icons/Feather";
 
@@ -22,14 +23,31 @@ export function RestaurantSelectionScreen() {
   const { colors } = useTheme();
   const styles = useGlobalStyles();
   const { saveSelectedRestaurant } = useRestaurant();
+  const {
+    currentLocation,
+    isLoadingLocation,
+    hasPermission,
+    requestLocationPermission,
+    getNearbyRestaurants,
+    calculateDistance,
+    formatDistance,
+  } = useLocation();
 
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
+  const [filteredRestaurants, setFilteredRestaurants] = useState<Restaurant[]>(
+    []
+  );
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [sortByProximity, setSortByProximity] = useState(false);
 
   useEffect(() => {
     loadRestaurants();
   }, []);
+
+  useEffect(() => {
+    filterAndSortRestaurants();
+  }, [restaurants, searchTerm, sortByProximity, currentLocation]);
 
   const loadRestaurants = async () => {
     try {
@@ -44,29 +62,41 @@ export function RestaurantSelectionScreen() {
     }
   };
 
+  const filterAndSortRestaurants = async () => {
+    let filtered = restaurants.filter(
+      (restaurant) =>
+        restaurant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        restaurant.address?.city
+          ?.toLowerCase()
+          .includes(searchTerm.toLowerCase()) ||
+        restaurant.address?.state
+          ?.toLowerCase()
+          .includes(searchTerm.toLowerCase())
+    );
+
+    // Se ordenação por proximidade estiver ativada e temos localização
+    if (sortByProximity && currentLocation) {
+      filtered = await getNearbyRestaurants(filtered);
+    }
+
+    setFilteredRestaurants(filtered);
+  };
+
+  const handleLocationPermission = async () => {
+    const granted = await requestLocationPermission();
+    if (granted) {
+      setSortByProximity(true);
+    }
+  };
+
   const handleRestaurantSelect = async (restaurant: Restaurant) => {
     try {
-      // Salvar restaurante selecionado no contexto
       await saveSelectedRestaurant(restaurant);
-
-      // O MainNavigator irá automaticamente navegar para MainApp
-      // quando hasSelectedRestaurant mudar para true
     } catch (error) {
       console.error("Erro ao selecionar restaurante:", error);
       Alert.alert("Erro", "Não foi possível selecionar o restaurante");
     }
   };
-
-  const filteredRestaurants = restaurants.filter(
-    (restaurant) =>
-      restaurant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      restaurant.address?.city
-        ?.toLowerCase()
-        .includes(searchTerm.toLowerCase()) ||
-      restaurant.address?.state
-        ?.toLowerCase()
-        .includes(searchTerm.toLowerCase())
-  );
 
   if (isLoading) {
     return (
@@ -81,26 +111,24 @@ export function RestaurantSelectionScreen() {
 
   return (
     <SafeContainer>
-      {/* Header com ThemeToggle */}
+      {/* ThemeToggle no canto superior direito */}
+      <View style={localStyles.themeToggleContainer}>
+        <ThemeToggle />
+      </View>
+
+      {/* Header centralizado */}
       <View style={localStyles.header}>
-        <View style={localStyles.headerContent}>
-          <Text
-            style={[
-              styles.title,
-              { fontSize: 28, fontWeight: "700", textAlign: "center" },
-            ]}
-          >
-            Escolha seu Restaurante
-          </Text>
-          <Text
-            style={[styles.mutedText, { textAlign: "center", marginTop: 8 }]}
-          >
-            Selecione o restaurante onde você deseja fazer seu pedido
-          </Text>
-        </View>
-        <View style={localStyles.themeToggleContainer}>
-          <ThemeToggle />
-        </View>
+        <Text
+          style={[
+            styles.title,
+            { fontSize: 28, fontWeight: "700", textAlign: "center" },
+          ]}
+        >
+          Escolha seu Restaurante
+        </Text>
+        <Text style={[styles.mutedText, { textAlign: "center", marginTop: 8 }]}>
+          Selecione o restaurante onde você deseja fazer seu pedido
+        </Text>
       </View>
 
       <ScrollView
@@ -108,6 +136,7 @@ export function RestaurantSelectionScreen() {
         contentContainerStyle={localStyles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
+        {/* Barra de busca */}
         <View style={localStyles.searchContainer}>
           <View
             style={[
@@ -129,6 +158,51 @@ export function RestaurantSelectionScreen() {
           </View>
         </View>
 
+        {/* Botão de localização */}
+        <View style={localStyles.locationContainer}>
+          <TouchableOpacity
+            onPress={handleLocationPermission}
+            style={[
+              localStyles.locationButton,
+              {
+                backgroundColor: sortByProximity ? colors.primary : colors.card,
+                borderColor: colors.border,
+              },
+            ]}
+            disabled={isLoadingLocation}
+          >
+            {isLoadingLocation ? (
+              <ActivityIndicator
+                size="small"
+                color={colors.primaryForeground}
+              />
+            ) : (
+              <Icon
+                name={sortByProximity ? "map-pin" : "map-pin"}
+                size={20}
+                color={
+                  sortByProximity ? colors.primaryForeground : colors.foreground
+                }
+              />
+            )}
+            <Text
+              style={[
+                localStyles.locationButtonText,
+                {
+                  color: sortByProximity
+                    ? colors.primaryForeground
+                    : colors.foreground,
+                },
+              ]}
+            >
+              {sortByProximity
+                ? "Ordenar por proximidade"
+                : "Usar minha localização"}
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Lista de restaurantes */}
         <View style={localStyles.restaurantsContainer}>
           {filteredRestaurants.length === 0 ? (
             <View style={localStyles.emptyState}>
@@ -146,37 +220,81 @@ export function RestaurantSelectionScreen() {
               </Text>
             </View>
           ) : (
-            filteredRestaurants.map((restaurant) => (
-              <TouchableOpacity
-                key={restaurant.id}
-                style={[
-                  localStyles.restaurantCard,
-                  { backgroundColor: colors.card, borderColor: colors.border },
-                ]}
-                onPress={() => handleRestaurantSelect(restaurant)}
-                activeOpacity={0.7}
-              >
-                <View style={localStyles.restaurantInfo}>
-                  <Text
-                    style={[styles.title, { fontSize: 18, fontWeight: "600" }]}
-                  >
-                    {restaurant.name}
-                  </Text>
-                  {(restaurant.address?.city || restaurant.address?.state) && (
-                    <Text style={[styles.mutedText, { marginTop: 4 }]}>
-                      {[restaurant.address?.city, restaurant.address?.state]
-                        .filter(Boolean)
-                        .join(", ")}
-                    </Text>
-                  )}
-                </View>
-                <Icon
-                  name="chevron-right"
-                  size={20}
-                  color={colors.mutedForeground}
-                />
-              </TouchableOpacity>
-            ))
+            filteredRestaurants.map((restaurant) => {
+              const distance = calculateDistance(restaurant);
+              const isNearby =
+                sortByProximity && distance !== null && distance <= 5000;
+
+              return (
+                <TouchableOpacity
+                  key={restaurant.id}
+                  style={[
+                    localStyles.restaurantCard,
+                    {
+                      backgroundColor: colors.card,
+                      borderColor: colors.border,
+                    },
+                    isNearby && { borderColor: colors.primary, borderWidth: 2 },
+                  ]}
+                  onPress={() => handleRestaurantSelect(restaurant)}
+                  activeOpacity={0.7}
+                >
+                  <View style={localStyles.restaurantInfo}>
+                    <View style={localStyles.restaurantHeader}>
+                      <Text
+                        style={[
+                          styles.title,
+                          {
+                            fontSize: 18,
+                            fontWeight: "600",
+                            flex: 1,
+                            marginRight: 8,
+                          },
+                        ]}
+                        numberOfLines={2}
+                      >
+                        {restaurant.name}
+                      </Text>
+                      {isNearby && (
+                        <View style={localStyles.nearbyBadge}>
+                          <Icon
+                            name="map-pin"
+                            size={12}
+                            color={colors.primary}
+                          />
+                          <Text
+                            style={[
+                              localStyles.nearbyText,
+                              { color: colors.primary },
+                            ]}
+                          >
+                            Próximo
+                          </Text>
+                        </View>
+                      )}
+                    </View>
+                    {(restaurant.address?.city ||
+                      restaurant.address?.state) && (
+                      <Text style={[styles.mutedText, { marginTop: 4 }]}>
+                        {[restaurant.address?.city, restaurant.address?.state]
+                          .filter(Boolean)
+                          .join(", ")}
+                      </Text>
+                    )}
+                    {distance !== null && (
+                      <Text style={[styles.mutedText, { marginTop: 2 }]}>
+                        📍 {formatDistance(distance)} de distância
+                      </Text>
+                    )}
+                  </View>
+                  <Icon
+                    name="chevron-right"
+                    size={20}
+                    color={colors.mutedForeground}
+                  />
+                </TouchableOpacity>
+              );
+            })
           )}
         </View>
       </ScrollView>
@@ -198,19 +316,15 @@ const localStyles = StyleSheet.create({
     paddingBottom: 100,
   },
   header: {
-    flexDirection: "row",
-    alignItems: "flex-start",
+    alignItems: "center",
     marginBottom: 32,
     paddingHorizontal: 24,
-    paddingTop: 16,
-  },
-  headerContent: {
-    flex: 1,
-    alignItems: "center",
+    paddingTop: 60,
   },
   themeToggleContainer: {
-    marginLeft: 16,
-    marginTop: 4,
+    position: "absolute",
+    top: 16,
+    right: 16,
   },
   searchContainer: {
     marginBottom: 24,
@@ -229,6 +343,21 @@ const localStyles = StyleSheet.create({
     fontSize: 16,
     flex: 1,
   },
+  locationContainer: {
+    marginBottom: 24,
+    alignItems: "center",
+  },
+  locationButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  locationButtonText: {
+    marginLeft: 12,
+    fontSize: 16,
+  },
   restaurantsContainer: {
     gap: 12,
   },
@@ -241,6 +370,27 @@ const localStyles = StyleSheet.create({
   },
   restaurantInfo: {
     flex: 1,
+  },
+  restaurantHeader: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    flexWrap: "wrap",
+  },
+  nearbyBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    backgroundColor: "rgba(59, 130, 246, 0.1)",
+    flexShrink: 0,
+    minWidth: 60,
+  },
+  nearbyText: {
+    fontSize: 12,
+    fontWeight: "600",
+    marginLeft: 4,
   },
   emptyState: {
     alignItems: "center",

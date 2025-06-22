@@ -3,16 +3,51 @@ import * as Device from 'expo-device';
 import { Platform, Alert } from 'react-native';
 import { storageService } from './storage';
 import Constants from 'expo-constants';
+import { APP_CONFIG } from '../config/app-config';
+import { NOTIFICATION_STYLES, NOTIFICATION_SOUNDS, PRIORITY_CONFIG } from '../config/notification-config';
 
-// Configurar comportamento das notificações
+// Configuração personalizada das notificações
 Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: false,
-    shouldShowBanner: true,
-    shouldShowList: true,
-  }),
+  handleNotification: async (notification) => {
+    // Personalizar comportamento baseado no tipo de notificação
+    const data = notification.request.content.data as any;
+    const type = data?.type || 'default';
+    
+    switch (type) {
+      case 'reservation_created':
+        return {
+          shouldShowAlert: true,
+          shouldPlaySound: true,
+          shouldSetBadge: true,
+          shouldShowBanner: true,
+          shouldShowList: true,
+        };
+      case 'reservation_reminder':
+        return {
+          shouldShowAlert: true,
+          shouldPlaySound: true,
+          shouldSetBadge: true,
+          shouldShowBanner: true,
+          shouldShowList: true,
+        };
+      case 'proximity':
+        return {
+          shouldShowAlert: true,
+          shouldPlaySound: true,
+          shouldSetBadge: false,
+          shouldShowBanner: true,
+          shouldShowList: true,
+        };
+      default:
+        return {
+          shouldShowAlert: true,
+          shouldPlaySound: true,
+          shouldSetBadge: false,
+          shouldShowBanner: true,
+          shouldShowList: true,
+        };
+    }
+  },
 });
 
 class PushNotificationService {
@@ -196,6 +231,7 @@ class PushNotificationService {
           body: notification.body,
           data: notification.data || {},
           sound: true,
+          icon: APP_CONFIG.notification.icon,
         },
         trigger: null, // Enviar imediatamente
       });
@@ -203,6 +239,88 @@ class PushNotificationService {
       console.log('✅ Notificação local enviada');
     } catch (error) {
       console.error('❌ Erro ao enviar notificação local:', error);
+    }
+  }
+
+  // Enviar notificação personalizada com ícone e cor
+  async sendCustomNotification(notification: {
+    title: string;
+    body: string;
+    type: 'reservation_created' | 'reservation_reminder' | 'proximity' | 'order_update' | 'promotion';
+    data?: Record<string, unknown>;
+    icon?: string;
+    color?: string;
+    sound?: boolean;
+    priority?: 'default' | 'normal' | 'high';
+  }): Promise<void> {
+    try {
+      const notificationContent = {
+        title: notification.title,
+        body: notification.body,
+        data: {
+          type: notification.type,
+          ...notification.data,
+        },
+        sound: notification.sound ?? true,
+        priority: notification.priority || 'default',
+        // Usar ícone personalizado do app
+        icon: APP_CONFIG.notification.icon,
+        // Personalizações específicas por tipo
+        ...this.getNotificationCustomization(notification.type),
+      };
+
+      await Notifications.scheduleNotificationAsync({
+        content: notificationContent,
+        trigger: null, // Enviar imediatamente
+      });
+
+      console.log(`✅ Notificação personalizada enviada: ${notification.type}`);
+    } catch (error) {
+      console.error('❌ Erro ao enviar notificação personalizada:', error);
+    }
+  }
+
+  // Obter personalização específica por tipo de notificação
+  private getNotificationCustomization(type: string) {
+    switch (type) {
+      case 'reservation_created':
+        return {
+          // Som específico para reservas (se disponível)
+          sound: 'notification_success.wav',
+          // Badge para indicar nova reserva
+          badge: 1,
+        };
+      case 'reservation_reminder':
+        return {
+          // Som de alerta para lembretes
+          sound: 'notification_reminder.wav',
+          // Prioridade alta para lembretes
+          priority: 'high' as const,
+        };
+      case 'proximity':
+        return {
+          // Som suave para proximidade
+          sound: 'notification_proximity.wav',
+          // Sem badge para não poluir
+          badge: 0,
+        };
+      case 'order_update':
+        return {
+          // Som de atualização
+          sound: 'notification_update.wav',
+          badge: 1,
+        };
+      case 'promotion':
+        return {
+          // Som de promoção
+          sound: 'notification_promotion.wav',
+          badge: 0,
+        };
+      default:
+        return {
+          sound: true,
+          badge: 0,
+        };
     }
   }
 
@@ -220,6 +338,7 @@ class PushNotificationService {
           body: notification.body,
           data: notification.data || {},
           sound: true,
+          icon: APP_CONFIG.notification.icon,
         },
         trigger: notification.trigger,
       });
@@ -312,15 +431,16 @@ class PushNotificationService {
     reservationId: string
   ): Promise<void> {
     try {
-      await this.sendLocalNotification({
-        title: 'Lembrete de Reserva',
+      await this.sendCustomNotification({
+        title: 'Lembrete de Reserva ⏰',
         body: `Sua reserva no ${restaurantName} está marcada para ${time}. Não se esqueça!`,
+        type: 'reservation_reminder',
         data: {
-          type: 'reservation_reminder',
           reservationId,
           restaurantName,
           time,
         },
+        priority: 'high',
       });
 
       console.log('✅ Lembrete de reserva enviado');
@@ -335,18 +455,104 @@ class PushNotificationService {
     message: string
   ): Promise<void> {
     try {
-      await this.sendLocalNotification({
-        title: `Promoção - ${restaurantName}`,
+      await this.sendCustomNotification({
+        title: `Promoção - ${restaurantName} 🎉`,
         body: message,
+        type: 'proximity',
         data: {
-          type: 'proximity',
           restaurantName,
         },
+        priority: 'normal',
       });
 
       console.log('✅ Notificação de proximidade enviada');
     } catch (error) {
       console.error('❌ Erro ao enviar notificação de proximidade:', error);
+    }
+  }
+
+  // Enviar notificação de reserva criada
+  async sendReservationCreatedNotification(
+    restaurantName: string,
+    date: string,
+    time: string,
+    reservationId: string
+  ): Promise<void> {
+    try {
+      await this.sendCustomNotification({
+        title: 'Reserva Criada com Sucesso! 🎉',
+        body: `Sua reserva no ${restaurantName} para ${date} às ${time} foi criada e adicionada ao seu calendário.`,
+        type: 'reservation_created',
+        data: {
+          reservationId,
+          restaurantName,
+          date,
+          time,
+        },
+        priority: 'high',
+      });
+
+      console.log('✅ Notificação de reserva criada enviada');
+    } catch (error) {
+      console.error('❌ Erro ao enviar notificação de reserva criada:', error);
+    }
+  }
+
+  // Enviar notificação de atualização de pedido
+  async sendOrderUpdateNotification(
+    orderId: string,
+    status: string,
+    restaurantName: string
+  ): Promise<void> {
+    try {
+      const statusMessages = {
+        confirmed: 'foi confirmado',
+        preparing: 'está sendo preparado',
+        ready: 'está pronto para retirada',
+        delivered: 'foi entregue',
+        cancelled: 'foi cancelado',
+      };
+
+      const message = statusMessages[status as keyof typeof statusMessages] || 'foi atualizado';
+
+      await this.sendCustomNotification({
+        title: 'Atualização do Pedido 📋',
+        body: `Seu pedido no ${restaurantName} ${message}.`,
+        type: 'order_update',
+        data: {
+          orderId,
+          status,
+          restaurantName,
+        },
+        priority: 'normal',
+      });
+
+      console.log('✅ Notificação de atualização de pedido enviada');
+    } catch (error) {
+      console.error('❌ Erro ao enviar notificação de pedido:', error);
+    }
+  }
+
+  // Enviar notificação de promoção
+  async sendPromotionNotification(
+    title: string,
+    message: string,
+    promotionData?: any
+  ): Promise<void> {
+    try {
+      await this.sendCustomNotification({
+        title: `Promoção Especial! ${title}`,
+        body: message,
+        type: 'promotion',
+        data: {
+          promotionData,
+        },
+        priority: 'normal',
+      });
+
+      console.log('✅ Notificação de promoção enviada');
+    } catch (error) {
+      console.error('❌ Erro ao enviar notificação de promoção:', error);
     }
   }
 }

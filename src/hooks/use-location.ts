@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { Alert } from 'react-native';
 import { LocationData } from '../types/assistant';
 import { locationService } from '../services/location';
+import { Restaurant } from '../domain/restaurant';
+import { restaurantService } from '../services/restaurant';
 
 interface RestaurantLocation {
   id: string;
@@ -11,38 +13,34 @@ interface RestaurantLocation {
   radius: number;
 }
 
-export const useLocation = () => {
+export function useLocation() {
   const [currentLocation, setCurrentLocation] = useState<LocationData | null>(null);
   const [isTracking, setIsTracking] = useState(false);
   const [hasPermission, setHasPermission] = useState(false);
   const [nearbyRestaurants, setNearbyRestaurants] = useState<RestaurantLocation[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingLocation, setIsLoadingLocation] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Solicitar permissão de localização
-  const requestLocationPermission = useCallback(async (): Promise<boolean> => {
-    setIsLoading(true);
-    setError(null);
-
+  const requestLocationPermission = async () => {
     try {
+      setIsLoadingLocation(true);
       const granted = await locationService.requestLocationPermission();
       setHasPermission(granted);
       
       if (granted) {
-        // Obter localização atual após permissão concedida
-        const location = await locationService.getCurrentLocation();
-        setCurrentLocation(location);
+        await getCurrentLocation();
       }
       
       return granted;
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Erro ao solicitar permissão';
-      setError(errorMessage);
+    } catch (error) {
+      console.error('Erro ao solicitar permissão de localização:', error);
+      Alert.alert('Erro', 'Não foi possível acessar sua localização');
       return false;
     } finally {
-      setIsLoading(false);
+      setIsLoadingLocation(false);
     }
-  }, []);
+  };
 
   // Iniciar monitoramento de localização
   const startLocationTracking = useCallback(async (): Promise<void> => {
@@ -75,22 +73,20 @@ export const useLocation = () => {
   }, []);
 
   // Obter localização atual
-  const getCurrentLocation = useCallback(async (): Promise<LocationData | null> => {
-    setIsLoading(true);
-    setError(null);
-
+  const getCurrentLocation = async () => {
     try {
+      setIsLoadingLocation(true);
       const location = await locationService.getCurrentLocation();
       setCurrentLocation(location);
       return location;
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Erro ao obter localização';
-      setError(errorMessage);
+    } catch (error) {
+      console.error('Erro ao obter localização:', error);
+      Alert.alert('Erro', 'Não foi possível obter sua localização');
       return null;
     } finally {
-      setIsLoading(false);
+      setIsLoadingLocation(false);
     }
-  }, []);
+  };
 
   // Configurar restaurantes para geofencing
   const setupRestaurantGeofencing = useCallback(async (
@@ -105,72 +101,96 @@ export const useLocation = () => {
     }
   }, []);
 
-  // Buscar restaurantes próximos
-  const findNearbyRestaurants = useCallback(async (
-    maxDistance: number = 5000
-  ): Promise<RestaurantLocation[]> => {
+  // Buscar restaurantes por proximidade
+  const getNearbyRestaurants = async (
+    restaurants: Restaurant[],
+    maxDistance: number = 5000 // 5km por padrão
+  ): Promise<Restaurant[]> => {
     if (!currentLocation) {
-      Alert.alert('Localização', 'Não foi possível obter sua localização atual.');
-      return [];
+      console.log('📍 Localização não disponível para busca por proximidade');
+      return restaurants;
     }
-
-    setIsLoading(true);
-    setError(null);
 
     try {
-      const nearby = await locationService.getNearbyRestaurants(currentLocation, maxDistance);
-      setNearbyRestaurants(nearby);
-      return nearby;
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Erro ao buscar restaurantes próximos';
-      setError(errorMessage);
-      return [];
-    } finally {
-      setIsLoading(false);
+      // Usar a nova API de proximidade do backend
+      const proximityResult = await restaurantService.getRestaurantsByProximity(
+        currentLocation.latitude,
+        currentLocation.longitude,
+        maxDistance / 1000, // Converter para km
+        1, // página 1
+        50 // máximo de resultados
+      );
+
+      // Se a API retornou restaurantes, usar eles
+      if (proximityResult.restaurants.length > 0) {
+        console.log('📍 Restaurantes encontrados por proximidade:', proximityResult.restaurants.length);
+        return proximityResult.restaurants;
+      }
+
+      // Fallback: filtrar restaurantes que têm coordenadas
+      const restaurantsWithCoordinates = restaurants.filter(
+        restaurant => restaurant.coordinates
+      );
+
+      if (restaurantsWithCoordinates.length === 0) {
+        console.log('📍 Nenhum restaurante com coordenadas encontrado');
+        return restaurants;
+      }
+
+      // Buscar restaurantes próximos usando o serviço local
+      const nearbyRestaurants = await locationService.getNearbyRestaurants(
+        currentLocation,
+        maxDistance
+      );
+
+      // Mapear IDs dos restaurantes próximos
+      const nearbyIds = nearbyRestaurants.map(r => r.id);
+
+      // Ordenar restaurantes: próximos primeiro, depois os demais
+      const sortedRestaurants = [...restaurants].sort((a, b) => {
+        const aIsNearby = a.coordinates && nearbyIds.includes(a.id);
+        const bIsNearby = b.coordinates && nearbyIds.includes(b.id);
+        
+        if (aIsNearby && !bIsNearby) return -1;
+        if (!aIsNearby && bIsNearby) return 1;
+        return 0;
+      });
+
+      return sortedRestaurants;
+    } catch (error) {
+      console.error('Erro ao buscar restaurantes próximos:', error);
+      return restaurants;
     }
-  }, [currentLocation]);
+  };
 
-  // Verificar se está próximo de um restaurante específico
-  const isNearRestaurant = useCallback((
-    restaurantLat: number,
-    restaurantLng: number,
-    maxDistance: number = 500
-  ): boolean => {
-    if (!currentLocation) return false;
+  // Calcular distância entre localização atual e restaurante
+  const calculateDistance = (restaurant: Restaurant): number | null => {
+    if (!currentLocation || !restaurant.coordinates) {
+      return null;
+    }
 
-    const distance = calculateDistance(
-      currentLocation.latitude,
-      currentLocation.longitude,
-      restaurantLat,
-      restaurantLng
-    );
-
-    return distance <= maxDistance;
-  }, [currentLocation]);
-
-  // Calcular distância entre dois pontos
-  const calculateDistance = (
-    lat1: number,
-    lon1: number,
-    lat2: number,
-    lon2: number
-  ): number => {
     const R = 6371e3; // Raio da Terra em metros
-    const φ1 = (lat1 * Math.PI) / 180;
-    const φ2 = (lat2 * Math.PI) / 180;
-    const Δφ = ((lat2 - lat1) * Math.PI) / 180;
-    const Δλ = ((lon2 - lon1) * Math.PI) / 180;
+    const φ1 = (currentLocation.latitude * Math.PI) / 180;
+    const φ2 = (restaurant.coordinates.latitude * Math.PI) / 180;
+    const Δφ = ((restaurant.coordinates.latitude - currentLocation.latitude) * Math.PI) / 180;
+    const Δλ = ((restaurant.coordinates.longitude - currentLocation.longitude) * Math.PI) / 180;
 
     const a =
       Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
       Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
-    return R * c;
+    const distance = R * c;
+
+    return distance;
   };
 
   // Formatar distância para exibição
   const formatDistance = (distance: number): string => {
+    if (isNaN(distance) || distance === null || distance === undefined) {
+      return 'N/A';
+    }
+    
     if (distance < 1000) {
       return `${Math.round(distance)}m`;
     } else {
@@ -213,7 +233,7 @@ export const useLocation = () => {
     isTracking,
     hasPermission,
     nearbyRestaurants,
-    isLoading,
+    isLoadingLocation,
     error,
     
     // Actions
@@ -222,12 +242,11 @@ export const useLocation = () => {
     stopLocationTracking,
     getCurrentLocation,
     setupRestaurantGeofencing,
-    findNearbyRestaurants,
+    getNearbyRestaurants,
     checkTrackingStatus,
     
     // Utilities
-    isNearRestaurant,
     calculateDistance,
     formatDistance,
   };
-}; 
+} 

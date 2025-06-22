@@ -9,6 +9,68 @@ export const useReservations = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Função para agendar lembretes de reserva
+  const scheduleReservationReminders = useCallback(async (reservation: Reservation) => {
+    try {
+      // Calcular datas para lembretes
+      const [day, month, year] = reservation.date.split('/').map(Number);
+      const [hour, minute] = reservation.time.split(':').map(Number);
+      const reservationDate = new Date(year, month - 1, day, hour, minute);
+      
+      // Lembrete 1 dia antes
+      const oneDayBefore = new Date(reservationDate.getTime() - 24 * 60 * 60 * 1000);
+      if (oneDayBefore > new Date()) {
+        await pushNotificationService.scheduleNotification({
+          title: 'Lembrete de Reserva - Amanhã 📅',
+          body: `Sua reserva no ${reservation.restaurantName} está marcada para amanhã às ${reservation.time}.`,
+          data: { 
+            type: 'reservation_reminder',
+            reservationId: reservation.id,
+            restaurantName: reservation.restaurantName,
+            time: reservation.time
+          },
+          trigger: { date: oneDayBefore }
+        });
+      }
+
+      // Lembrete 1 hora antes
+      const oneHourBefore = new Date(reservationDate.getTime() - 60 * 60 * 1000);
+      if (oneHourBefore > new Date()) {
+        await pushNotificationService.scheduleNotification({
+          title: 'Lembrete de Reserva - 1 hora ⏰',
+          body: `Sua reserva no ${reservation.restaurantName} está marcada para ${reservation.time}. Não se esqueça!`,
+          data: { 
+            type: 'reservation_reminder',
+            reservationId: reservation.id,
+            restaurantName: reservation.restaurantName,
+            time: reservation.time
+          },
+          trigger: { date: oneHourBefore }
+        });
+      }
+
+      // Lembrete 15 minutos antes
+      const fifteenMinutesBefore = new Date(reservationDate.getTime() - 15 * 60 * 1000);
+      if (fifteenMinutesBefore > new Date()) {
+        await pushNotificationService.scheduleNotification({
+          title: 'Sua reserva está chegando! 🚀',
+          body: `Reserva no ${reservation.restaurantName} em 15 minutos. Hora de sair!`,
+          data: { 
+            type: 'reservation_reminder',
+            reservationId: reservation.id,
+            restaurantName: reservation.restaurantName,
+            time: reservation.time
+          },
+          trigger: { date: fifteenMinutesBefore }
+        });
+      }
+
+      console.log('✅ Lembretes de reserva agendados com sucesso');
+    } catch (error) {
+      console.error('❌ Erro ao agendar lembretes:', error);
+    }
+  }, []);
+
   // Carregar reservas
   const loadReservations = useCallback(async () => {
     setIsLoading(true);
@@ -43,17 +105,16 @@ export const useReservations = () => {
       // Recarregar reservas do storage em vez de atualizar estado local
       await loadReservations();
 
-      // Agendar lembrete de reserva
-      const reservationDate = new Date(`${newReservation.date}T${newReservation.time}`);
-      const reminderDate = new Date(reservationDate.getTime() - 60 * 60 * 1000); // 1 hora antes
-      
-      if (reminderDate > new Date()) {
-        await pushNotificationService.sendReservationReminder(
-          newReservation.restaurantName,
-          newReservation.time,
-          newReservation.id
-        );
-      }
+      // Enviar notificação de sucesso
+      await pushNotificationService.sendReservationCreatedNotification(
+        newReservation.restaurantName,
+        newReservation.date,
+        newReservation.time,
+        newReservation.id
+      );
+
+      // Agendar lembretes automáticos
+      await scheduleReservationReminders(newReservation);
 
       Alert.alert(
         'Reserva Criada',
@@ -71,7 +132,7 @@ export const useReservations = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [loadReservations]);
+  }, [loadReservations, scheduleReservationReminders]);
 
   // Cancelar reserva
   const cancelReservation = useCallback(async (reservationId: string): Promise<boolean> => {
