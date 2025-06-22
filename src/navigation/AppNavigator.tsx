@@ -34,6 +34,7 @@ function HomeStack() {
         options={{
           headerShown: true,
           title: "Configurações",
+          headerBackTitle: "",
           headerStyle: {
             backgroundColor: colors.card,
           },
@@ -49,6 +50,7 @@ function HomeStack() {
         options={{
           headerShown: true,
           title: "Minhas Reservas",
+          headerBackTitle: "",
           headerStyle: {
             backgroundColor: colors.card,
           },
@@ -64,6 +66,7 @@ function HomeStack() {
         options={{
           headerShown: true,
           title: "Histórico de Pedidos",
+          headerBackTitle: "",
           headerStyle: {
             backgroundColor: colors.card,
           },

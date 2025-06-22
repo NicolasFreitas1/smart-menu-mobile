@@ -5,7 +5,7 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "owner": "nicolasfreitas",
     "projectId": "ed0c33be-f31d-435f-9a5b-e4738dec90bd",
@@ -17,6 +17,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.yourcompany.smartmenumobile",
+      "userInterfaceStyle": "automatic",
       "infoPlist": {
         "NSCalendarsUsageDescription": "Este app precisa acessar seu calendário para adicionar reservas automaticamente.",
         "NSLocationWhenInUseUsageDescription": "Este app usa sua localização para enviar promoções por proximidade.",
@@ -31,6 +32,7 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.yourcompany.smartmenumobile",
+      "userInterfaceStyle": "automatic",
       "edgeToEdgeEnabled": true,
       "permissions": [
         "android.permission.READ_CALENDAR",

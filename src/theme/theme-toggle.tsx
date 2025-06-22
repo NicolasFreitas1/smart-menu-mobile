@@ -4,7 +4,7 @@ import { useTheme } from "./theme-provider";
 import Icon from "react-native-vector-icons/Feather";
 
 export function ThemeToggle() {
-  const { theme, setTheme, colors } = useTheme();
+  const { theme, setTheme, colors, isDark } = useTheme();
   const [isOpen, setIsOpen] = React.useState(false);
 
   const handleSelect = (newTheme: "light" | "dark" | "system") => {
@@ -18,6 +18,14 @@ export function ThemeToggle() {
     setIsOpen(true);
   };
 
+  // Determina qual ícone mostrar baseado no tema atual
+  const getIconName = () => {
+    if (theme === "system") {
+      return isDark ? "moon" : "sun";
+    }
+    return theme === "dark" ? "moon" : "sun";
+  };
+
   return (
     <>
       <TouchableOpacity
@@ -26,11 +34,7 @@ export function ThemeToggle() {
         activeOpacity={0.7}
         hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
       >
-        <Icon
-          name={theme === "dark" ? "moon" : "sun"}
-          size={20}
-          color={colors.foreground}
-        />
+        <Icon name={getIconName()} size={20} color={colors.foreground} />
       </TouchableOpacity>
 
       <Modal
