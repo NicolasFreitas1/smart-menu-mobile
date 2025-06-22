@@ -10,6 +10,7 @@ import { Restaurant } from "../domain/restaurant";
 import { restaurantService } from "../services/restaurant";
 import { storageService } from "../services/storage";
 import { AxiosError } from "axios";
+import { logger } from "../utils/logger";
 
 interface RestaurantContextProps {
   restaurant?: Restaurant;
@@ -65,25 +66,33 @@ export function RestaurantProvider({
 
   const loadLocalData = async () => {
     try {
+      logger.info("🏪 Carregando dados locais do restaurante...");
+
       const history = await storageService.getRestaurantHistory();
       const lastVisited = await storageService.getLastVisitedRestaurant();
       const savedRestaurant = await storageService.getSelectedRestaurant();
 
       if (history) {
         setRestaurantHistory(history);
+        logger.info(`📚 Histórico carregado: ${history.length} restaurantes`);
       }
 
       if (lastVisited) {
         setLastVisitedRestaurant(lastVisited);
+        logger.info(`📍 Último restaurante visitado: ${lastVisited}`);
       }
 
       if (savedRestaurant) {
         setSelectedRestaurant(savedRestaurant);
-        // Usa o restaurante salvo como restaurante principal
         setRestaurant(savedRestaurant);
+        logger.success(
+          `🏪 Restaurante salvo carregado: ${savedRestaurant.name}`
+        );
+      } else {
+        logger.info("ℹ️ Nenhum restaurante salvo encontrado");
       }
     } catch (error) {
-      console.error("Erro ao carregar dados locais:", error);
+      logger.error("❌ Erro ao carregar dados locais:", error);
     }
   };
 
@@ -92,10 +101,12 @@ export function RestaurantProvider({
     const targetRestaurantId = selectedRestaurant?.id || restaurantId;
 
     if (!targetRestaurantId) {
+      logger.warning("⚠️ Nenhum restaurantId disponível para buscar");
       setIsLoading(false);
       return;
     }
 
+    logger.info(`🔍 Buscando restaurante com ID: ${targetRestaurantId}`);
     setIsLoading(true);
 
     try {
@@ -105,6 +116,7 @@ export function RestaurantProvider({
 
       if (fetchedRestaurant && fetchedRestaurant.id) {
         setRestaurant(fetchedRestaurant);
+        logger.success(`✅ Restaurante carregado: ${fetchedRestaurant.name}`);
 
         // Salva o restaurante no histórico e como último visitado
         await addToHistory({
@@ -118,7 +130,7 @@ export function RestaurantProvider({
           setLastVisitedRestaurant(fetchedRestaurant.id);
         }
       } else {
-        console.warn(
+        logger.warning(
           "⚠️ Restaurante retornado sem ID válido:",
           fetchedRestaurant
         );
@@ -126,7 +138,7 @@ export function RestaurantProvider({
       }
     } catch (error) {
       const axiosError = error as AxiosError;
-      console.error("❌ Erro ao buscar restaurante:", error);
+      logger.error("❌ Erro ao buscar restaurante:", error);
 
       if (axiosError.response?.status === 404) {
         Alert.alert("Erro", "Restaurante não encontrado", [{ text: "OK" }]);
@@ -160,8 +172,9 @@ export function RestaurantProvider({
       if (updatedHistory) {
         setRestaurantHistory(updatedHistory);
       }
+      logger.info(`📚 Restaurante adicionado ao histórico: ${restaurant.name}`);
     } catch (error) {
-      console.error("Erro ao adicionar restaurante ao histórico:", error);
+      logger.error("❌ Erro ao adicionar restaurante ao histórico:", error);
     }
   };
 
@@ -170,10 +183,10 @@ export function RestaurantProvider({
       await storageService.setSelectedRestaurant(restaurant);
       setSelectedRestaurant(restaurant);
       setRestaurant(restaurant);
-      console.log("🏪 Restaurante salvo no contexto:", restaurant.name);
+      logger.success(`🏪 Restaurante salvo no contexto: ${restaurant.name}`);
       return true;
     } catch (error) {
-      console.error("Erro ao salvar restaurante no contexto:", error);
+      logger.error("❌ Erro ao salvar restaurante no contexto:", error);
       return false;
     }
   };
@@ -183,10 +196,10 @@ export function RestaurantProvider({
       await storageService.clearSelectedRestaurant();
       setSelectedRestaurant(null);
       setRestaurant(undefined);
-      console.log("🏪 Restaurante removido do contexto");
+      logger.info("🏪 Restaurante removido do contexto");
       return true;
     } catch (error) {
-      console.error("Erro ao remover restaurante do contexto:", error);
+      logger.error("❌ Erro ao remover restaurante do contexto:", error);
       return false;
     }
   };
@@ -195,15 +208,17 @@ export function RestaurantProvider({
     if (restaurant) {
       setRestaurant(restaurant);
       setSelectedRestaurant(restaurant);
+      logger.info(`🏪 Restaurante definido diretamente: ${restaurant.name}`);
     } else {
       setRestaurant(undefined);
       setSelectedRestaurant(null);
+      logger.info("🏪 Restaurante removido diretamente");
     }
   };
 
   const contextValue: RestaurantContextProps = {
     restaurant,
-    restaurantId: selectedRestaurant?.id || restaurantId,
+    restaurantId: selectedRestaurant?.id || restaurantId || undefined,
     isLoading,
     refetchRestaurant: fetchRestaurant,
     restaurantHistory,

@@ -14,6 +14,8 @@ import {
   cleanupCorruptedReservations,
 } from "./utils/storage-cleanup";
 import { useAppInitialization } from "./hooks/use-app-initialization";
+import { logger } from "./utils/logger";
+import { validateAppConfig, getRestaurantId } from "./config/app-config";
 
 function AppContent() {
   const { isDark, colors } = useTheme();
@@ -68,26 +70,33 @@ export default function App() {
   useEffect(() => {
     const initializeServices = async () => {
       try {
-        console.log("🚀 Iniciando Smart Menu Mobile...");
+        logger.info("🚀 Iniciando Smart Menu Mobile...");
+
+        // Validar configuração do app
+        const configValidation = validateAppConfig();
+        if (!configValidation.isValid) {
+          logger.critical("❌ Configuração inválida:", configValidation.errors);
+          // Em produção, você pode querer mostrar um erro para o usuário
+        }
 
         // Limpeza do storage para resolver problemas de JSON corrompido
-        console.log("🧹 Verificando e limpando storage...");
+        logger.info("🧹 Verificando e limpando storage...");
         await cleanupStorage();
 
         // Limpeza específica de reservas corrompidas
-        console.log("📅 Verificando dados de reservas...");
+        logger.info("📅 Verificando dados de reservas...");
         await cleanupCorruptedReservations();
 
         // Inicializar serviços
-        console.log("🔧 Inicializando serviços...");
+        logger.info("🔧 Inicializando serviços...");
         await Promise.all([
           offlineSyncService.initialize(),
           pushNotificationService.initialize(),
         ]);
 
-        console.log("✅ Aplicação inicializada com sucesso!");
+        logger.success("✅ Aplicação inicializada com sucesso!");
       } catch (error) {
-        console.error("❌ Erro na inicialização:", error);
+        logger.critical("❌ Erro na inicialização:", error);
       } finally {
         setIsLoading(false);
       }
@@ -104,7 +113,7 @@ export default function App() {
     <SafeAreaProvider>
       <ThemeProvider>
         <AuthProvider>
-          <RestaurantProvider>
+          <RestaurantProvider restaurantId={getRestaurantId()}>
             <CartProvider>
               <AppContent />
             </CartProvider>

@@ -557,7 +557,8 @@ export function ReservationScreen({ navigation }: any) {
 
         {showCreateForm && renderCreateForm()}
 
-        {/* Seção de Teste de Notificações */}
+        {/* Seção de Teste de Notificações - COMENTADA PARA PRODUÇÃO */}
+        {/*
         <View style={localStyles.section}>
           <Text style={[styles.subtitle, { marginBottom: 12 }]}>
             Teste de Notificações
@@ -661,6 +662,7 @@ export function ReservationScreen({ navigation }: any) {
             </TouchableOpacity>
           </View>
         </View>
+        */}
 
         {confirmedReservations.length > 0 && (
           <View style={localStyles.section}>

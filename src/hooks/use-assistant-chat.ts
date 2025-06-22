@@ -25,6 +25,9 @@ export function useAssistantChat() {
   const { restaurantId } = useRestaurant();
   const { addToCart } = useCart();
 
+  // Validar se restaurantId está disponível
+  const validatedRestaurantId = restaurantId || undefined;
+
   const [currentStep, setCurrentStep] = useState<Step>(getInitialStep());
   const [conversationHistory, setConversationHistory] = useState<string[]>([]);
   const [isComplete, setIsComplete] = useState(false);
@@ -35,15 +38,15 @@ export function useAssistantChat() {
   const [addedToCart, setAddedToCart] = useState(false);
 
   const generateSuggestion = useCallback(async (context: string) => {
-    if (!restaurantId) {
+    if (!validatedRestaurantId) {
       throw new Error("Restaurante não selecionado");
     }
 
     console.log("🤖 Gerando sugestão para contexto:", context);
-    console.log("🏪 Restaurant ID:", restaurantId);
+    console.log("🏪 Restaurant ID:", validatedRestaurantId);
 
     const { text, dish } = await aiService.generateAISuggestion({
-      restaurantId: String(restaurantId),
+      restaurantId: String(validatedRestaurantId),
       messages: [{ role: "user", content: context }],
     });
 
@@ -62,14 +65,14 @@ export function useAssistantChat() {
           name: dish.name,
           description: dish.description,
           price: 0,
-          restaurantId: String(restaurantId),
+          restaurantId: String(validatedRestaurantId),
         };
         setSuggestedDish(fallbackDish);
       }
     }
 
     return finalMessage;
-  }, [restaurantId]);
+  }, [validatedRestaurantId]);
 
   const selectOption = useCallback((optionValue: string) => {
     const nextStep = getStep(optionValue);
@@ -146,7 +149,7 @@ export function useAssistantChat() {
 
   const handleOptionClick = useCallback(async (option: Option) => {
     console.log("🎯 Opção selecionada:", option.label, "Valor:", option.value);
-    console.log("🏪 Restaurant ID atual:", restaurantId);
+    console.log("🏪 Restaurant ID atual:", validatedRestaurantId);
     
     // Adiciona a escolha do usuário às mensagens
     setMessages((prev) => [...prev, { role: "user", content: option.label }]);
@@ -165,7 +168,7 @@ export function useAssistantChat() {
         console.log("📝 Contexto final enviado para IA:", context);
         console.log("📊 Total de escolhas:", updatedChoices.length);
         
-        if (!restaurantId) {
+        if (!validatedRestaurantId) {
           throw new Error("Restaurante não selecionado. Verifique se um restaurante está configurado.");
         }
 
@@ -210,7 +213,7 @@ export function useAssistantChat() {
         ]);
       }
     }
-  }, [currentStep, conversationHistory, generateSuggestion, restaurantId]);
+  }, [currentStep, conversationHistory, generateSuggestion, validatedRestaurantId]);
 
   const handleAddToCart = useCallback(() => {
     if (suggestedDish) {

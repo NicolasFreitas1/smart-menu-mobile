@@ -5,6 +5,7 @@ import { useMenuFilters } from "./use-menu-filters";
 import { useRestaurant } from "../context/RestaurantContext";
 import { restaurantService } from "../services/restaurant";
 import { MESSAGES, FILTERS } from "../config/constants";
+import { logger } from "../utils/logger";
 
 interface MenuState {
   dishes: Dish[];
@@ -33,16 +34,16 @@ export function useMenu() {
   // Carregar categorias
   const fetchCategories = useCallback(async () => {
     try {
-      console.log("🔄 Fetching categories...");
+      logger.info("🔄 Buscando categorias...");
       const result = await restaurantService.getCategories();
       setState((prev) => ({
         ...prev,
         categories: result,
         error: null,
       }));
-      console.log("✅ Categories loaded:", result.length);
+      logger.success(`✅ Categorias carregadas: ${result.length}`);
     } catch (error) {
-      console.error("❌ Error fetching categories:", error);
+      logger.error("❌ Erro ao buscar categorias:", error);
       setState((prev) => ({
         ...prev,
         error: MESSAGES.ERROR.FETCH_CATEGORIES,
@@ -54,7 +55,7 @@ export function useMenu() {
   // Carregar pratos
   const fetchDishes = useCallback(async () => {
     if (!restaurant) {
-      console.log("⚠️ No restaurant found, setting loading to false");
+      logger.warning("⚠️ Nenhum restaurante encontrado, definindo loading como false");
       setState((prev) => ({
         ...prev,
         isLoading: false,
@@ -63,12 +64,22 @@ export function useMenu() {
       return;
     }
 
+    if (!restaurant.id) {
+      logger.error("❌ Restaurante sem ID válido:", restaurant);
+      setState((prev) => ({
+        ...prev,
+        isLoading: false,
+        error: "Restaurante sem ID válido",
+      }));
+      return;
+    }
+
     try {
-      console.log("🔄 Fetching dishes with filters:", filters);
-      console.log("🏪 Restaurant ID:", restaurant.id);
+      logger.info(`🔄 Buscando pratos com filtros:`, filters);
+      logger.info(`🏪 Restaurant ID: ${restaurant.id}`);
 
       const dishes = await restaurantService.getDishes(restaurant.id, filters);
-      console.log("🍽️ Received dishes:", dishes.length, "dishes");
+      logger.success(`🍽️ Pratos recebidos: ${dishes.length} pratos`);
 
       setState((prev) => ({
         ...prev,
@@ -78,9 +89,9 @@ export function useMenu() {
         error: null,
       }));
 
-      console.log("✅ Dishes loaded:", dishes.length);
+      logger.success(`✅ Pratos carregados: ${dishes.length}`);
     } catch (error) {
-      console.error("❌ Error fetching dishes:", error);
+      logger.error("❌ Erro ao buscar pratos:", error);
       setState((prev) => ({
         ...prev,
         isLoading: false,
@@ -91,14 +102,14 @@ export function useMenu() {
 
   // Carregar dados iniciais
   const loadInitialData = useCallback(async () => {
-    console.log("🏁 Initial load - fetching categories");
+    logger.info("🏁 Carregamento inicial - buscando categorias");
     setState((prev) => ({ ...prev, isLoading: true, error: null }));
 
     try {
       await fetchCategories();
       await fetchDishes();
     } catch (error) {
-      console.error("❌ Error in loadInitialData:", error);
+      logger.error("❌ Erro no carregamento inicial:", error);
       setState((prev) => ({
         ...prev,
         isLoading: false,
@@ -109,19 +120,20 @@ export function useMenu() {
 
   // Recarregar dados
   const refreshData = useCallback(async () => {
+    logger.info("🔄 Recarregando dados do menu...");
     await loadInitialData();
   }, [loadInitialData]);
 
   // Mudança de categoria
   const handleCategoryChange = useCallback((categoryName: string) => {
-    console.log("🎯 Category changed to:", categoryName);
+    logger.info(`🎯 Categoria alterada para: ${categoryName}`);
     setState((prev) => ({ ...prev, selectedCategory: categoryName }));
 
     if (categoryName === FILTERS.DEFAULT_CATEGORY) {
-      console.log("🗑️ Clearing category filters");
+      logger.info("🗑️ Limpando filtros de categoria");
       updateFilters({ selectedCategories: [] });
     } else {
-      console.log("✅ Updating filters with category name:", categoryName);
+      logger.info(`✅ Atualizando filtros com nome da categoria: ${categoryName}`);
       updateFilters({ selectedCategories: [categoryName] });
     }
   }, [updateFilters]);
@@ -133,15 +145,15 @@ export function useMenu() {
 
   // Efeito para recarregar pratos quando filtros mudarem
   useEffect(() => {
-    console.log("🔄 useEffect triggered - filters changed");
-    console.log("📊 Current filters:", filters);
-    console.log("🔄 isLoading state:", state.isLoading);
+    logger.info("🔄 useEffect disparado - filtros alterados");
+    logger.info(`📊 Filtros atuais:`, filters);
+    logger.info(`🔄 Estado isLoading: ${state.isLoading}`);
 
     if (!state.isLoading) {
-      console.log("🔄 Filters changed, fetching dishes...");
+      logger.info("🔄 Filtros alterados, buscando pratos...");
       fetchDishes();
     } else {
-      console.log("⏳ Skipping fetchDishes because isLoading is true");
+      logger.info("⏳ Pulando fetchDishes porque isLoading é true");
     }
   }, [filters.selectedCategories, filters.priceRange, filters.sortBy, state.isLoading, fetchDishes]);
 

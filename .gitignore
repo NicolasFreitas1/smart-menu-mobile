@@ -10,6 +10,8 @@ web-build/
 expo-env.d.ts
 
 # Native
+android/
+ios/
 .kotlin/
 *.orig.*
 *.jks
@@ -35,3 +37,23 @@ yarn-error.*
 
 # typescript
 *.tsbuildinfo
+
+# Build files
+*.apk
+*.aab
+*.apks
+app/
+
+# EAS
+.easignore
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.temp

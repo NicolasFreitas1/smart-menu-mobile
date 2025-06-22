@@ -10,10 +10,11 @@ import {
 } from "react-native";
 import { useGlobalStyles } from "../../theme/hooks";
 import { useTheme } from "../../theme/theme-provider";
-import { appConfig } from "../../config/app-config";
+import { getRestaurantId } from "../../config/app-config";
 import { restaurantService } from "../../services/restaurant";
 import { Restaurant } from "../../domain/restaurant";
 import { useRestaurant } from "../../context/RestaurantContext";
+import { logger } from "../../utils/logger";
 
 export function RestaurantConfig() {
   const styles = useGlobalStyles();
@@ -85,6 +86,8 @@ export function RestaurantConfig() {
   const loadRestaurants = async () => {
     try {
       setIsLoadingRestaurants(true);
+      logger.info("🔄 Carregando restaurantes...");
+
       const allRestaurants = await restaurantService.getAllRestaurants();
 
       // Garantir que allRestaurants seja sempre um array
@@ -103,21 +106,34 @@ export function RestaurantConfig() {
           typeof restaurant.name === "string"
       );
 
-      console.log("🏪 Total restaurants from API:", restaurantsArray.length);
-      console.log("🏪 Valid restaurants found:", validRestaurants.length);
+      logger.info(
+        `🏪 Total de restaurantes da API: ${restaurantsArray.length}`
+      );
+      logger.info(
+        `🏪 Restaurantes válidos encontrados: ${validRestaurants.length}`
+      );
 
       setRestaurants(validRestaurants);
       setFilteredRestaurants(validRestaurants);
 
       // Tenta encontrar o restaurante atual na lista
+      const currentRestaurantId = getRestaurantId();
       const currentRestaurant = validRestaurants.find(
-        (r) => r.id === appConfig.restaurantId
+        (r) => r.id === currentRestaurantId
       );
+
       if (currentRestaurant) {
         setTempSelectedRestaurant(currentRestaurant);
+        logger.info(
+          `✅ Restaurante atual encontrado na lista: ${currentRestaurant.name}`
+        );
+      } else {
+        logger.info(
+          `ℹ️ Restaurante atual (${currentRestaurantId}) não encontrado na lista`
+        );
       }
     } catch (error) {
-      console.error("Erro ao carregar restaurantes:", error);
+      logger.error("❌ Erro ao carregar restaurantes:", error);
       Alert.alert("Erro", "Não foi possível carregar os restaurantes");
       // Em caso de erro, definir arrays vazios
       setRestaurants([]);
@@ -143,7 +159,7 @@ export function RestaurantConfig() {
     setIsLoading(true);
 
     try {
-      console.log("🔍 Testando restaurante:", tempSelectedRestaurant.id);
+      logger.info(`🔍 Testando restaurante: ${tempSelectedRestaurant.id}`);
       const restaurant = await restaurantService.getRestaurant(
         tempSelectedRestaurant.id
       );
@@ -153,7 +169,7 @@ export function RestaurantConfig() {
         `Nome: ${restaurant.name}\nID: ${restaurant.id}\n\nEste restaurante está disponível na API.`
       );
     } catch (error: any) {
-      console.error("❌ Erro ao testar restaurante:", error);
+      logger.error("❌ Erro ao testar restaurante:", error);
 
       if (error.response?.status === 404) {
         Alert.alert(
@@ -194,7 +210,7 @@ export function RestaurantConfig() {
         Alert.alert("Erro", "Não foi possível salvar o restaurante");
       }
     } catch (error) {
-      console.error("Erro ao salvar restaurante:", error);
+      logger.error("❌ Erro ao salvar restaurante:", error);
       Alert.alert("Erro", "Não foi possível salvar o restaurante");
     } finally {
       setIsSaving(false);

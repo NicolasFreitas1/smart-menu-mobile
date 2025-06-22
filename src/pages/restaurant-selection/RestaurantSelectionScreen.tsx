@@ -52,11 +52,22 @@ export function RestaurantSelectionScreen() {
   const loadRestaurants = async () => {
     try {
       setIsLoading(true);
+      console.log("🔄 Carregando restaurantes...");
       const result = await restaurantService.getAllRestaurants();
+
+      // Validar se o resultado é um array
+      if (!Array.isArray(result)) {
+        console.error("❌ Resultado não é um array:", result);
+        setRestaurants([]);
+        return;
+      }
+
+      console.log(`✅ ${result.length} restaurantes carregados`);
       setRestaurants(result);
     } catch (error) {
       console.error("Erro ao carregar restaurantes:", error);
       Alert.alert("Erro", "Não foi possível carregar os restaurantes");
+      setRestaurants([]);
     } finally {
       setIsLoading(false);
     }

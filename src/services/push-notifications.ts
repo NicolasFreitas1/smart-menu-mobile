@@ -230,7 +230,7 @@ class PushNotificationService {
           title: notification.title,
           body: notification.body,
           data: notification.data || {},
-          sound: true,
+          sound: 'default', // Som padrão do sistema
           icon: APP_CONFIG.notification.icon,
         },
         trigger: null, // Enviar imediatamente
@@ -261,7 +261,7 @@ class PushNotificationService {
           type: notification.type,
           ...notification.data,
         },
-        sound: notification.sound ?? true,
+        sound: 'default', // Sempre usar som padrão
         priority: notification.priority || 'default',
         // Usar ícone personalizado do app
         icon: APP_CONFIG.notification.icon,
@@ -337,7 +337,7 @@ class PushNotificationService {
           title: notification.title,
           body: notification.body,
           data: notification.data || {},
-          sound: true,
+          sound: 'default', // Som padrão do sistema
           icon: APP_CONFIG.notification.icon,
         },
         trigger: notification.trigger,

@@ -15,7 +15,7 @@ export const NOTIFICATION_STYLES: Record<string, NotificationStyle> = {
   reservation_created: {
     icon: '🎉',
     color: '#10b981', // green-500
-    sound: 'notification_success.wav',
+    sound: 'default', // Som padrão do sistema
     priority: 'high',
     badge: true,
     vibration: true,
@@ -23,7 +23,7 @@ export const NOTIFICATION_STYLES: Record<string, NotificationStyle> = {
   reservation_reminder: {
     icon: '⏰',
     color: '#f59e0b', // amber-500
-    sound: 'notification_reminder.wav',
+    sound: 'default', // Som padrão do sistema
     priority: 'high',
     badge: true,
     vibration: true,
@@ -31,7 +31,7 @@ export const NOTIFICATION_STYLES: Record<string, NotificationStyle> = {
   reservation_confirmed: {
     icon: '✅',
     color: '#10b981', // green-500
-    sound: 'notification_success.wav',
+    sound: 'default', // Som padrão do sistema
     priority: 'normal',
     badge: true,
     vibration: false,
@@ -39,7 +39,7 @@ export const NOTIFICATION_STYLES: Record<string, NotificationStyle> = {
   reservation_cancelled: {
     icon: '❌',
     color: '#ef4444', // red-500
-    sound: 'notification_error.wav',
+    sound: 'default', // Som padrão do sistema
     priority: 'normal',
     badge: false,
     vibration: false,
@@ -47,7 +47,7 @@ export const NOTIFICATION_STYLES: Record<string, NotificationStyle> = {
   proximity: {
     icon: '📍',
     color: '#3b82f6', // blue-500
-    sound: 'notification_proximity.wav',
+    sound: 'default', // Som padrão do sistema
     priority: 'normal',
     badge: false,
     vibration: true,
@@ -55,7 +55,7 @@ export const NOTIFICATION_STYLES: Record<string, NotificationStyle> = {
   order_update: {
     icon: '📋',
     color: '#8b5cf6', // violet-500
-    sound: 'notification_update.wav',
+    sound: 'default', // Som padrão do sistema
     priority: 'normal',
     badge: true,
     vibration: false,
@@ -63,7 +63,7 @@ export const NOTIFICATION_STYLES: Record<string, NotificationStyle> = {
   promotion: {
     icon: '🎊',
     color: '#ec4899', // pink-500
-    sound: 'notification_promotion.wav',
+    sound: 'default', // Som padrão do sistema
     priority: 'normal',
     badge: false,
     vibration: true,
@@ -78,15 +78,9 @@ export const NOTIFICATION_STYLES: Record<string, NotificationStyle> = {
   },
 };
 
-// Configurações de som personalizadas
+// Configurações de som - usando apenas padrão
 export const NOTIFICATION_SOUNDS = {
-  default: 'default',
-  success: 'notification_success.wav',
-  reminder: 'notification_reminder.wav',
-  proximity: 'notification_proximity.wav',
-  update: 'notification_update.wav',
-  promotion: 'notification_promotion.wav',
-  error: 'notification_error.wav',
+  default: 'default', // Som padrão do sistema
 };
 
 // Configurações de vibração
@@ -169,7 +163,7 @@ export const GEOFENCING_CONFIG = {
 
 // Configurações de teste
 export const TEST_CONFIG = {
-  enable_test_buttons: true,
+  enable_test_buttons: false,
   test_notification_delay: 5000, // 5 segundos
   auto_clear_test_notifications: true,
   test_sound_enabled: true,

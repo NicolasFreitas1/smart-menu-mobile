@@ -2,14 +2,21 @@
  * Configuração da aplicação
  */
 
+// Função para obter variáveis de ambiente de forma segura
+const getEnvVar = (key: string, defaultValue: string): string => {
+  // Em React Native, variáveis de ambiente são limitadas
+  // Por enquanto, usamos valores padrão seguros
+  return defaultValue;
+};
+
 export const APP_CONFIG = {
   name: 'Smart Menu',
   version: '1.0.0',
   description: 'App de cardápio digital e reservas',
   
-  // UUID do restaurante na sua API
-  // Substitua pelo UUID real do seu restaurante
-  restaurantId: "4a94dbcc-b9b7-470c-9a47-c61062f66579", // Exemplo de UUID
+  // UUID do restaurante - CONFIGURAR COM UUID REAL
+  // ⚠️ IMPORTANTE: Substitua pelo UUID real do seu restaurante
+  restaurantId: getEnvVar('RESTAURANT_ID', '4a94dbcc-b9b7-470c-9a47-c61062f66579'),
   
   // Configurações de notificação
   notification: {
@@ -30,9 +37,9 @@ export const APP_CONFIG = {
   
   // Configurações de desenvolvimento
   development: {
-    enableTestButtons: true,
-    enableDebugLogs: true,
-    enableMockData: true,
+    enableTestButtons: false,
+    enableDebugLogs: false,
+    enableMockData: false,
   },
   
   // Configurações de produção
@@ -83,7 +90,33 @@ export const getRestaurantId = (): string => {
   if (!isValidUUID(id)) {
     console.warn("⚠️ Restaurant ID não é um UUID válido:", id);
     console.warn("💡 Configure um UUID válido em src/config/app-config.ts");
+    console.warn("🔧 Exemplo de UUID válido: 123e4567-e89b-12d3-a456-426614174000");
   }
 
   return id;
+};
+
+// Função para validar configuração completa
+export const validateAppConfig = (): { isValid: boolean; errors: string[] } => {
+  const errors: string[] = [];
+  
+  // Validar Restaurant ID
+  if (!isValidUUID(APP_CONFIG.restaurantId)) {
+    errors.push('Restaurant ID não é um UUID válido');
+  }
+  
+  // Validar versão
+  if (!APP_CONFIG.version || APP_CONFIG.version === '0.0.0') {
+    errors.push('Versão do app não configurada');
+  }
+  
+  // Validar nome
+  if (!APP_CONFIG.name || APP_CONFIG.name.trim() === '') {
+    errors.push('Nome do app não configurado');
+  }
+  
+  return {
+    isValid: errors.length === 0,
+    errors
+  };
 };
