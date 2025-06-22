@@ -103,8 +103,14 @@ export function useUserPreferences() {
   // Atualiza configurações de notificação
   const updateNotificationSettings = useCallback(
     async (settings: Partial<UserPreferences["notifications"]>) => {
+      const currentNotifications = preferences.notifications || {
+        orderUpdates: true,
+        promotions: true,
+        newItems: true,
+      };
+      
       const updatedNotifications = {
-        ...preferences.notifications,
+        ...currentNotifications,
         ...settings,
       };
       await updatePreferences({ notifications: updatedNotifications });

@@ -60,8 +60,12 @@ export function RestaurantSelectionScreen() {
   const filteredRestaurants = restaurants.filter(
     (restaurant) =>
       restaurant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      restaurant.city?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      restaurant.state?.toLowerCase().includes(searchTerm.toLowerCase())
+      restaurant.address?.city
+        ?.toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
+      restaurant.address?.state
+        ?.toLowerCase()
+        .includes(searchTerm.toLowerCase())
   );
 
   if (isLoading) {
@@ -158,19 +162,11 @@ export function RestaurantSelectionScreen() {
                   >
                     {restaurant.name}
                   </Text>
-                  {(restaurant.city || restaurant.state) && (
+                  {(restaurant.address?.city || restaurant.address?.state) && (
                     <Text style={[styles.mutedText, { marginTop: 4 }]}>
-                      {[restaurant.city, restaurant.state]
+                      {[restaurant.address?.city, restaurant.address?.state]
                         .filter(Boolean)
                         .join(", ")}
-                    </Text>
-                  )}
-                  {restaurant.description && (
-                    <Text
-                      style={[styles.mutedText, { marginTop: 4, fontSize: 14 }]}
-                      numberOfLines={2}
-                    >
-                      {restaurant.description}
                     </Text>
                   )}
                 </View>

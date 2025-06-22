@@ -4,192 +4,14 @@ import { useCart } from "../context/CartContext";
 import { aiService } from "../services/ai";
 import { Dish } from "../domain/dish";
 import { Option, Step, ChatMessage } from "../types/assistant";
-
-const conversationFlow: Record<string, Step> = {
-  start: {
-    id: "start",
-    question: "O que você quer pedir?",
-    options: [
-      { label: "Entrada", value: "entrada" },
-      { label: "Bebida", value: "bebida" },
-      { label: "Salada", value: "salada" },
-      { label: "Prato Principal", value: "prato_principal" },
-      { label: "Sobremesa", value: "sobremesa" },
-    ],
-  },
-  entrada: {
-    id: "entrada",
-    question: "Porções ou saladas?",
-    options: [
-      { label: "Porções", value: "entrada_porcoes" },
-      { label: "Saladas", value: "entrada_saladas" },
-    ],
-  },
-  entrada_porcoes: {
-    id: "entrada_porcoes",
-    question: "Porções fritas ou não fritas?",
-    options: [
-      { label: "Fritas", value: "entrada_porcoes_fritas" },
-      { label: "Não fritas", value: "entrada_porcoes_nao_fritas" },
-    ],
-    end: true,
-  },
-  entrada_saladas: {
-    id: "entrada_saladas",
-    question: "Com parmesão ou sem?",
-    options: [
-      { label: "Com parmesão", value: "entrada_saladas_com_parmesao" },
-      { label: "Sem parmesão", value: "entrada_saladas_sem_parmesao" },
-    ],
-    end: true,
-  },
-  bebida: {
-    id: "bebida",
-    question: "Bebida com gás ou sem?",
-    options: [
-      { label: "Com gás", value: "bebida_com_gas" },
-      { label: "Sem gás", value: "bebida_sem_gas" },
-    ],
-  },
-  bebida_com_gas: {
-    id: "bebida_com_gas",
-    question: "Refrigerante ou energético?",
-    options: [
-      { label: "Refrigerante", value: "bebida_com_gas_refrigerante" },
-      { label: "Energético", value: "bebida_com_gas_energetico" },
-    ],
-    end: true,
-  },
-  bebida_sem_gas: {
-    id: "bebida_sem_gas",
-    question: "Suco ou água?",
-    options: [
-      { label: "Suco", value: "bebida_sem_gas_suco" },
-      { label: "Água", value: "bebida_sem_gas_agua" },
-    ],
-    end: true,
-  },
-  salada: {
-    id: "salada",
-    question: "Com queijo parmesão ou sem?",
-    options: [
-      { label: "Com parmesão", value: "salada_com_parmesao" },
-      { label: "Sem parmesão", value: "salada_sem_parmesao" },
-    ],
-    end: true,
-  },
-  prato_principal: {
-    id: "prato_principal",
-    question: "Para quantas pessoas?",
-    options: [
-      { label: "Individual", value: "prato_individual" },
-      { label: "2 pessoas", value: "prato_duas_pessoas" },
-    ],
-  },
-  prato_individual: {
-    id: "prato_individual",
-    question: "Escolha o tipo:",
-    options: [
-      { label: "Grill", value: "prato_individual_grill" },
-      { label: "Pastas", value: "prato_individual_pastas" },
-      { label: "Peixes", value: "prato_individual_peixes" },
-      { label: "Risotos", value: "prato_individual_risotos" },
-      { label: "Pratos Fitness", value: "prato_individual_fitness" },
-    ],
-  },
-  prato_individual_grill: {
-    id: "prato_individual_grill",
-    question: "Escolha a carne:",
-    options: [
-      { label: "Frango", value: "prato_individual_grill_frango" },
-      { label: "Costela suína", value: "prato_individual_grill_costela_suina" },
-      { label: "Pernil de cordeiro", value: "prato_individual_grill_pernil_cordeiro" },
-      { label: "Filé", value: "prato_individual_grill_file" },
-      { label: "Picanha", value: "prato_individual_grill_picanha" },
-      { label: "Iscas de carne", value: "prato_individual_grill_iscas_carne" },
-    ],
-    end: true,
-  },
-  prato_individual_pastas: {
-    id: "prato_individual_pastas",
-    question: "Escolha o molho:",
-    options: [
-      { label: "Molho branco", value: "prato_individual_pastas_molho_branco" },
-      { label: "Molho misto", value: "prato_individual_pastas_molho_misto" },
-      { label: "Molho sugo", value: "prato_individual_pastas_molho_sugo" },
-      { label: "Molho de tomate", value: "prato_individual_pastas_molho_tomate" },
-    ],
-    end: true,
-  },
-  prato_individual_peixes: {
-    id: "prato_individual_peixes",
-    question: "Escolha o peixe:",
-    options: [
-      { label: "Camarão", value: "prato_individual_peixes_camarao" },
-      { label: "Congrio", value: "prato_individual_peixes_congrio" },
-      { label: "Paella", value: "prato_individual_peixes_paella" },
-      { label: "Salmão", value: "prato_individual_peixes_salmao" },
-      { label: "Siri", value: "prato_individual_peixes_siri" },
-    ],
-    end: true,
-  },
-  prato_individual_risotos: {
-    id: "prato_individual_risotos",
-    question: "Com algum tipo de carne ou sem?",
-    options: [
-      { label: "Com carne", value: "prato_individual_risotos_com_carne" },
-      { label: "Sem carne", value: "prato_individual_risotos_sem_carne" },
-    ],
-    end: true,
-  },
-  prato_individual_fitness: {
-    id: "prato_individual_fitness",
-    question: "Escolha o prato:",
-    options: [
-      { label: "Escondidinho", value: "prato_individual_fitness_escondidinho" },
-      { label: "Nhoque", value: "prato_individual_fitness_nhoque" },
-      { label: "Bolinho de carne", value: "prato_individual_fitness_bolinho_carne" },
-      { label: "Omelete", value: "prato_individual_fitness_omelete" },
-    ],
-    end: true,
-  },
-  prato_duas_pessoas: {
-    id: "prato_duas_pessoas",
-    question: "Escolha o tipo:",
-    options: [
-      { label: "Escalopes e pastas", value: "prato_duas_pessoas_escalopes_pastas" },
-      { label: "Peixes", value: "prato_duas_pessoas_peixes" },
-    ],
-  },
-  prato_duas_pessoas_escalopes_pastas: {
-    id: "prato_duas_pessoas_escalopes_pastas",
-    question: "Escolha:",
-    options: [
-      { label: "Filé", value: "prato_duas_pessoas_escalopes_pastas_file" },
-      { label: "Frango", value: "prato_duas_pessoas_escalopes_pastas_frango" },
-      { label: "Talharim", value: "prato_duas_pessoas_escalopes_pastas_talharim" },
-    ],
-    end: true,
-  },
-  prato_duas_pessoas_peixes: {
-    id: "prato_duas_pessoas_peixes",
-    question: "Escolha o peixe:",
-    options: [
-      { label: "Camarão", value: "prato_duas_pessoas_peixes_camarao" },
-      { label: "Congrio", value: "prato_duas_pessoas_peixes_congrio" },
-      { label: "Paella", value: "prato_duas_pessoas_peixes_paella" },
-      { label: "Salmão", value: "prato_duas_pessoas_peixes_salmao" },
-      { label: "Siri", value: "prato_duas_pessoas_peixes_siri" },
-    ],
-    end: true,
-  },
-  sobremesa: {
-    id: "sobremesa",
-    question: "Escolha a sobremesa:",
-    options: [{ label: "Panqueca", value: "sobremesa_panqueca" }],
-    end: true,
-  },
-};
+import { 
+  conversationFlow, 
+  getStep, 
+  getInitialStep, 
+  isStepEnd,
+  getSuggestions,
+  isValidStep 
+} from "../config/conversation-flow";
 
 const initialMessages: ChatMessage[] = [
   {
@@ -203,15 +25,14 @@ export function useAssistantChat() {
   const { restaurantId } = useRestaurant();
   const { addToCart } = useCart();
 
-  const [currentStepId, setCurrentStepId] = useState("start");
+  const [currentStep, setCurrentStep] = useState<Step>(getInitialStep());
+  const [conversationHistory, setConversationHistory] = useState<string[]>([]);
+  const [isComplete, setIsComplete] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
   const [isLoading, setIsLoading] = useState(false);
   const [chatEnded, setChatEnded] = useState(false);
   const [suggestedDish, setSuggestedDish] = useState<Dish | null>(null);
   const [addedToCart, setAddedToCart] = useState(false);
-  const [userChoices, setUserChoices] = useState<string[]>([]);
-
-  const currentStep = conversationFlow[currentStepId];
 
   const generateSuggestion = useCallback(async (context: string) => {
     if (!restaurantId) {
@@ -250,6 +71,79 @@ export function useAssistantChat() {
     return finalMessage;
   }, [restaurantId]);
 
+  const selectOption = useCallback((optionValue: string) => {
+    const nextStep = getStep(optionValue);
+    
+    if (!nextStep) {
+      console.warn(`Step não encontrado: ${optionValue}`);
+      return;
+    }
+
+    // Adicionar à história da conversa
+    setConversationHistory(prev => [...prev, optionValue]);
+    
+    // Atualizar step atual
+    setCurrentStep(nextStep);
+    
+    // Verificar se chegou ao final
+    if (isStepEnd(optionValue)) {
+      setIsComplete(true);
+    }
+  }, []);
+
+  const resetConversation = useCallback(() => {
+    setCurrentStep(getInitialStep());
+    setConversationHistory([]);
+    setIsComplete(false);
+  }, []);
+
+  const goBack = useCallback(() => {
+    if (conversationHistory.length === 0) {
+      return;
+    }
+
+    const newHistory = conversationHistory.slice(0, -1);
+    setConversationHistory(newHistory);
+    
+    if (newHistory.length === 0) {
+      setCurrentStep(getInitialStep());
+    } else {
+      const previousStepId = newHistory[newHistory.length - 1];
+      const previousStep = getStep(previousStepId);
+      if (previousStep) {
+        setCurrentStep(previousStep);
+      }
+    }
+    
+    setIsComplete(false);
+  }, [conversationHistory]);
+
+  const getCurrentSuggestions = useCallback(() => {
+    return getSuggestions(conversationHistory);
+  }, [conversationHistory]);
+
+  const canGoBack = conversationHistory.length > 0;
+
+  const getProgress = useCallback(() => {
+    if (conversationHistory.length === 0) return 0;
+    
+    const totalSteps = Object.keys(conversationFlow).length;
+    const currentProgress = conversationHistory.length;
+    
+    return Math.min((currentProgress / totalSteps) * 100, 100);
+  }, [conversationHistory]);
+
+  const getCurrentPath = useCallback(() => {
+    return conversationHistory.map(stepId => {
+      const step = getStep(stepId);
+      return step ? step.question : stepId;
+    });
+  }, [conversationHistory]);
+
+  const validateStep = useCallback((stepId: string) => {
+    return isValidStep(stepId);
+  }, []);
+
   const handleOptionClick = useCallback(async (option: Option) => {
     console.log("🎯 Opção selecionada:", option.label, "Valor:", option.value);
     console.log("🏪 Restaurant ID atual:", restaurantId);
@@ -258,8 +152,8 @@ export function useAssistantChat() {
     setMessages((prev) => [...prev, { role: "user", content: option.label }]);
     
     // Adiciona o valor da opção ao histórico de escolhas
-    const updatedChoices = [...userChoices, option.value];
-    setUserChoices(updatedChoices);
+    const updatedChoices = [...conversationHistory, option.value];
+    setConversationHistory(updatedChoices);
 
     if (currentStep?.end) {
       setIsLoading(true);
@@ -306,17 +200,17 @@ export function useAssistantChat() {
       setIsLoading(false);
     } else {
       const nextStepId = option.value;
-      setCurrentStepId(nextStepId);
-
-      const nextStep = conversationFlow[nextStepId];
+      const nextStep = getStep(nextStepId);
+      
       if (nextStep) {
+        setCurrentStep(nextStep);
         setMessages((prev) => [
           ...prev,
           { role: "assistant", content: nextStep.question },
         ]);
       }
     }
-  }, [currentStep, userChoices, generateSuggestion, restaurantId]);
+  }, [currentStep, conversationHistory, generateSuggestion, restaurantId]);
 
   const handleAddToCart = useCallback(() => {
     if (suggestedDish) {
@@ -333,25 +227,30 @@ export function useAssistantChat() {
   }, [suggestedDish, addToCart]);
 
   const handleNewSuggestion = useCallback(() => {
-    setCurrentStepId("start");
-    setMessages(initialMessages);
+    resetConversation();
     setIsLoading(false);
     setChatEnded(false);
     setSuggestedDish(null);
     setAddedToCart(false);
-    setUserChoices([]);
-  }, []);
+  }, [resetConversation]);
 
   return {
-    // State
     currentStep,
+    conversationHistory,
+    isComplete,
+    canGoBack,
+    selectOption,
+    resetConversation,
+    goBack,
+    getCurrentSuggestions,
+    getProgress,
+    getCurrentPath,
+    validateStep,
     messages,
     isLoading,
     chatEnded,
     suggestedDish,
     addedToCart,
-    
-    // Actions
     handleOptionClick,
     handleAddToCart,
     handleNewSuggestion,

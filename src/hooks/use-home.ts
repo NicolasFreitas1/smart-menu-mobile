@@ -9,7 +9,12 @@ export function useHome() {
   const { totalItems, totalPrice, hasItems } = useCart();
 
   const handleSettingsPress = useCallback(() => {
-    navigation.navigate("Settings" as never);
+    console.log("Settings button pressed");
+    try {
+      navigation.navigate("Settings" as never);
+    } catch (error) {
+      console.error("Error navigating to Settings:", error);
+    }
   }, [navigation]);
 
   return {

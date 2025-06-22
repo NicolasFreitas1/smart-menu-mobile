@@ -24,13 +24,14 @@ export function OptionCard({ redirectTo, title, icon }: OptionCardProps) {
           borderColor: colors.border,
         },
       ]}
+      activeOpacity={0.7}
     >
-      <Icon name={icon} size={24} color={colors.mutedForeground} />
+      <Icon name={icon} size={24} color={colors.primary} />
       <Text
         style={[
           styles.title,
           {
-            color: colors.mutedForeground,
+            color: colors.foreground,
           },
         ]}
       >
@@ -44,14 +45,24 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 24,
+    padding: 20,
     borderRadius: 12,
     borderWidth: 1,
     marginVertical: 8,
+    minHeight: 60,
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
   },
   title: {
     fontSize: 18,
     fontWeight: "600",
-    marginLeft: 12,
+    marginLeft: 16,
+    flex: 1,
   },
 });

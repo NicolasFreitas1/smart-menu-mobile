@@ -21,8 +21,14 @@ interface OrderHistoryScreenProps {
 
 export function OrderHistoryScreen({ navigation }: OrderHistoryScreenProps) {
   const { colors } = useTheme();
-  const { orders, isLoading, error, getOrderStatistics, getMonthlySpending } =
-    useOrders();
+  const {
+    orders,
+    isLoading,
+    error,
+    loadOrders,
+    getOrderStatistics,
+    getMonthlySpending,
+  } = useOrders();
   const { createOrderUpdateNotification } = useNotifications();
   const [statistics, setStatistics] = useState<any>(null);
   const [monthlySpending, setMonthlySpending] = useState<any[]>([]);
@@ -40,12 +46,12 @@ export function OrderHistoryScreen({ navigation }: OrderHistoryScreenProps) {
 
   const getStatusColor = (status: string) => {
     const statusColors = {
-      pending: colors.warning,
-      confirmed: colors.info,
+      pending: colors.mutedForeground,
+      confirmed: colors.primary,
       preparing: colors.primary,
-      ready: colors.success,
-      delivered: colors.success,
-      cancelled: colors.error,
+      ready: colors.primary,
+      delivered: colors.primary,
+      cancelled: colors.destructive,
     };
     return (
       statusColors[status as keyof typeof statusColors] ||
@@ -121,7 +127,7 @@ export function OrderHistoryScreen({ navigation }: OrderHistoryScreenProps) {
       onPress={() => handleOrderPress(item)}
     >
       <View style={styles.orderHeader}>
-        <Text style={[styles.orderId, { color: colors.text }]}>
+        <Text style={[styles.orderId, { color: colors.foreground }]}>
           Pedido #{item.id.slice(-6)}
         </Text>
         <View
@@ -133,23 +139,25 @@ export function OrderHistoryScreen({ navigation }: OrderHistoryScreenProps) {
           <Feather
             name={getStatusIcon(item.status) as any}
             size={12}
-            color={colors.onPrimary}
+            color={colors.primaryForeground}
           />
-          <Text style={[styles.statusText, { color: colors.onPrimary }]}>
+          <Text
+            style={[styles.statusText, { color: colors.primaryForeground }]}
+          >
             {getStatusText(item.status)}
           </Text>
         </View>
       </View>
 
-      <Text style={[styles.restaurantName, { color: colors.text }]}>
+      <Text style={[styles.restaurantName, { color: colors.foreground }]}>
         {item.restaurantName}
       </Text>
 
       <View style={styles.orderFooter}>
-        <Text style={[styles.orderDate, { color: colors.textSecondary }]}>
+        <Text style={[styles.orderDate, { color: colors.mutedForeground }]}>
           {new Date(item.orderDate).toLocaleDateString("pt-BR")}
         </Text>
-        <Text style={[styles.orderTotal, { color: colors.text }]}>
+        <Text style={[styles.orderTotal, { color: colors.foreground }]}>
           {formatCurrency(item.totalAmount)}
         </Text>
       </View>
@@ -158,7 +166,7 @@ export function OrderHistoryScreen({ navigation }: OrderHistoryScreenProps) {
 
   const renderStatistics = () => (
     <View style={[styles.statsContainer, { backgroundColor: colors.card }]}>
-      <Text style={[styles.statsTitle, { color: colors.text }]}>
+      <Text style={[styles.statsTitle, { color: colors.foreground }]}>
         Estatísticas
       </Text>
 
@@ -167,7 +175,7 @@ export function OrderHistoryScreen({ navigation }: OrderHistoryScreenProps) {
           <Text style={[styles.statValue, { color: colors.primary }]}>
             {statistics?.totalOrders || 0}
           </Text>
-          <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
+          <Text style={[styles.statLabel, { color: colors.mutedForeground }]}>
             Total de Pedidos
           </Text>
         </View>
@@ -176,7 +184,7 @@ export function OrderHistoryScreen({ navigation }: OrderHistoryScreenProps) {
           <Text style={[styles.statValue, { color: colors.primary }]}>
             {formatCurrency(statistics?.totalSpent || 0)}
           </Text>
-          <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
+          <Text style={[styles.statLabel, { color: colors.mutedForeground }]}>
             Total Gasto
           </Text>
         </View>
@@ -185,7 +193,7 @@ export function OrderHistoryScreen({ navigation }: OrderHistoryScreenProps) {
           <Text style={[styles.statValue, { color: colors.primary }]}>
             {formatCurrency(statistics?.averageOrderValue || 0)}
           </Text>
-          <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
+          <Text style={[styles.statLabel, { color: colors.mutedForeground }]}>
             Média por Pedido
           </Text>
         </View>
@@ -193,10 +201,12 @@ export function OrderHistoryScreen({ navigation }: OrderHistoryScreenProps) {
 
       {statistics?.favoriteRestaurant && (
         <View style={styles.favoriteRestaurant}>
-          <Text style={[styles.favoriteLabel, { color: colors.textSecondary }]}>
+          <Text
+            style={[styles.favoriteLabel, { color: colors.mutedForeground }]}
+          >
             Restaurante Favorito:
           </Text>
-          <Text style={[styles.favoriteName, { color: colors.text }]}>
+          <Text style={[styles.favoriteName, { color: colors.foreground }]}>
             {statistics.favoriteRestaurant}
           </Text>
         </View>
@@ -206,13 +216,13 @@ export function OrderHistoryScreen({ navigation }: OrderHistoryScreenProps) {
 
   const renderMonthlySpending = () => (
     <View style={[styles.monthlyContainer, { backgroundColor: colors.card }]}>
-      <Text style={[styles.monthlyTitle, { color: colors.text }]}>
+      <Text style={[styles.monthlyTitle, { color: colors.foreground }]}>
         Gastos Mensais
       </Text>
 
       {monthlySpending.map((month, index) => (
         <View key={month.month} style={styles.monthlyItem}>
-          <Text style={[styles.monthlyMonth, { color: colors.text }]}>
+          <Text style={[styles.monthlyMonth, { color: colors.foreground }]}>
             {new Date(month.month + "-01").toLocaleDateString("pt-BR", {
               month: "long",
               year: "numeric",
@@ -229,7 +239,7 @@ export function OrderHistoryScreen({ navigation }: OrderHistoryScreenProps) {
   if (isLoading) {
     return (
       <SafeContainer
-        style={[styles.container, { backgroundColor: colors.background }]}
+        style={{ flex: 1, padding: 16, backgroundColor: colors.background }}
       >
         <ActivityIndicator size="large" color={colors.primary} />
       </SafeContainer>
@@ -239,54 +249,57 @@ export function OrderHistoryScreen({ navigation }: OrderHistoryScreenProps) {
   if (error) {
     return (
       <SafeContainer
-        style={[styles.container, { backgroundColor: colors.background }]}
+        style={{ flex: 1, padding: 16, backgroundColor: colors.background }}
       >
-        <Text style={[styles.errorText, { color: colors.error }]}>
-          Erro: {error}
-        </Text>
+        <View style={styles.errorContainer}>
+          <Text style={[styles.errorText, { color: colors.destructive }]}>
+            Erro ao carregar pedidos
+          </Text>
+          <Text
+            style={[styles.errorSubtext, { color: colors.mutedForeground }]}
+          >
+            {error}
+          </Text>
+        </View>
       </SafeContainer>
     );
   }
 
   return (
-    <SafeContainer
-      style={[styles.container, { backgroundColor: colors.background }]}
-    >
-      <View style={styles.header}>
-        <Text style={styles.title}>Histórico de Pedidos</Text>
-        <Text style={styles.subtitle}>
-          Acompanhe todos os seus pedidos e veja estatísticas de consumo
-        </Text>
-      </View>
-
-      <FlatList
-        data={orders}
-        renderItem={renderOrderItem}
-        keyExtractor={(item) => item.id}
-        showsVerticalScrollIndicator={false}
-        ListHeaderComponent={
-          <View>
-            {renderStatistics()}
-            {renderMonthlySpending()}
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>
-              Pedidos Recentes
-            </Text>
-          </View>
-        }
-        ListEmptyComponent={
+    <SafeContainer style={{ flex: 1, backgroundColor: colors.background }}>
+      <View style={styles.container}>
+        {orders.length === 0 ? (
           <View style={styles.emptyContainer}>
             <Feather name="package" size={48} color={colors.mutedForeground} />
-            <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
+            <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>
               Nenhum pedido encontrado
             </Text>
             <Text
-              style={[styles.emptySubtext, { color: colors.textSecondary }]}
+              style={[styles.emptySubtext, { color: colors.mutedForeground }]}
             >
-              Faça seu primeiro pedido para ver o histórico aqui
+              Seus pedidos aparecerão aqui
             </Text>
           </View>
-        }
-      />
+        ) : (
+          <FlatList
+            data={orders}
+            renderItem={renderOrderItem}
+            keyExtractor={(item) => item.id}
+            showsVerticalScrollIndicator={false}
+            ListHeaderComponent={
+              <View>
+                {renderStatistics()}
+                {renderMonthlySpending()}
+                <Text
+                  style={[styles.sectionTitle, { color: colors.foreground }]}
+                >
+                  Pedidos Recentes
+                </Text>
+              </View>
+            }
+          />
+        )}
+      </View>
     </SafeContainer>
   );
 }
@@ -295,12 +308,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
-  },
-  header: {
-    alignItems: "center",
-    marginBottom: 20,
-    paddingTop: 8,
-    paddingHorizontal: 16,
   },
   title: {
     textAlign: "center",
@@ -439,9 +446,17 @@ const styles = StyleSheet.create({
     fontSize: 14,
     textAlign: "center",
   },
+  errorContainer: {
+    alignItems: "center",
+    paddingVertical: 48,
+  },
   errorText: {
     fontSize: 16,
+    fontWeight: "500",
+    marginBottom: 8,
+  },
+  errorSubtext: {
+    fontSize: 14,
     textAlign: "center",
-    marginTop: 50,
   },
 });

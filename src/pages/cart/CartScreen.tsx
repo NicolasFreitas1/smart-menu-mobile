@@ -11,6 +11,7 @@ import { useTheme } from "../../theme/theme-provider";
 import { useCartScreen } from "../../hooks/use-cart";
 import { CartEmpty } from "../../components/cart/cart-empty";
 import { SafeContainer } from "../../components/ui/safe-container";
+import { OrderSummary } from "../../components/order-summary";
 import { formatCurrency } from "../../lib/format";
 
 export function CartScreen() {
@@ -29,6 +30,12 @@ export function CartScreen() {
   if (cartItems.length === 0) {
     return <CartEmpty />;
   }
+
+  const handleOrderComplete = (orderId: string) => {
+    // Navegar para o histórico de pedidos após finalizar
+    // Você pode implementar a navegação aqui se necessário
+    console.log("Pedido finalizado:", orderId);
+  };
 
   return (
     <SafeContainer>
@@ -119,30 +126,15 @@ export function CartScreen() {
               </View>
             ))}
           </View>
+
+          {/* OrderSummary Component */}
+          <OrderSummary
+            cartItems={cartItems}
+            totalPrice={totalPrice}
+            onOrderComplete={handleOrderComplete}
+            onClearCart={handleClearCart}
+          />
         </ScrollView>
-
-        {/* Footer com Total e Botões */}
-        <View style={localStyles.footer}>
-          <Text style={[styles.title, localStyles.totalText]}>
-            Total: {formatCurrency(totalPrice)}
-          </Text>
-
-          <View style={localStyles.actionsContainer}>
-            <TouchableOpacity
-              onPress={handleClearCart}
-              style={[styles.buttonSecondary, localStyles.clearButton]}
-            >
-              <Text style={styles.buttonTextSecondary}>Limpar Carrinho</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              onPress={handleFinalizeOrder}
-              style={[styles.buttonPrimary, localStyles.finalizeButton]}
-            >
-              <Text style={styles.buttonText}>Finalizar Pedido</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
       </View>
     </SafeContainer>
   );
@@ -211,29 +203,5 @@ const localStyles = StyleSheet.create({
     marginHorizontal: 12,
     minWidth: 20,
     textAlign: "center",
-  },
-  footer: {
-    alignItems: "center",
-    paddingTop: 16,
-    borderTopWidth: 1,
-    borderTopColor: "#e5e7eb",
-  },
-  totalText: {
-    fontSize: 18,
-    marginBottom: 16,
-  },
-  actionsContainer: {
-    flexDirection: "row",
-    marginHorizontal: 6,
-    width: "100%",
-  },
-  clearButton: {
-    flex: 1,
-    marginRight: 6,
-  },
-  finalizeButton: {
-    flex: 2,
-    marginLeft: 6,
-    backgroundColor: "#16a34a", // green-600
   },
 });

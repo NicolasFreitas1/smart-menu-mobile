@@ -84,11 +84,20 @@ export function CartResume({ totalItems, totalPrice }: CartResumeProps) {
 const styles = StyleSheet.create({
   container: {
     position: "absolute",
-    bottom: 95,
-    left: 24,
-    right: 24,
+    bottom: 100,
+    left: 16,
+    right: 16,
     borderRadius: 999,
     padding: 4,
+    zIndex: 5,
+    elevation: 5,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
   },
   content: {
     flexDirection: "row",

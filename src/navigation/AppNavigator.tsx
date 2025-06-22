@@ -10,12 +10,14 @@ import { AssistantScreen } from "../pages/assistant/AssistantScreen";
 import { SurpriseMeScreen } from "../pages/surprise-me/SurpriseMeScreen";
 import { CartScreen } from "../pages/cart/CartScreen";
 import { SettingsScreen } from "../pages/settings/SettingsScreen";
+import { ReservationScreen } from "../pages/reservations/ReservationScreen";
+import { OrderHistoryScreen } from "../pages/orders/OrderHistoryScreen";
 import { useTheme } from "../theme/theme-provider";
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
 
-// Stack Navigator para Home (permite navegar para Settings)
+// Stack Navigator para Home (permite navegar para Settings e Reservations)
 function HomeStack() {
   const { colors } = useTheme();
 
@@ -35,7 +37,37 @@ function HomeStack() {
           headerStyle: {
             backgroundColor: colors.card,
           },
-          headerTintColor: colors.text,
+          headerTintColor: colors.foreground,
+          headerTitleStyle: {
+            fontWeight: "600",
+          },
+        }}
+      />
+      <Stack.Screen
+        name="Reservations"
+        component={ReservationScreen}
+        options={{
+          headerShown: true,
+          title: "Minhas Reservas",
+          headerStyle: {
+            backgroundColor: colors.card,
+          },
+          headerTintColor: colors.foreground,
+          headerTitleStyle: {
+            fontWeight: "600",
+          },
+        }}
+      />
+      <Stack.Screen
+        name="OrderHistory"
+        component={OrderHistoryScreen}
+        options={{
+          headerShown: true,
+          title: "Histórico de Pedidos",
+          headerStyle: {
+            backgroundColor: colors.card,
+          },
+          headerTintColor: colors.foreground,
           headerTitleStyle: {
             fontWeight: "600",
           },

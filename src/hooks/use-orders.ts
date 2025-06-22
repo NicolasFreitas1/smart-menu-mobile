@@ -97,7 +97,7 @@ export const useOrders = () => {
       try {
         const success = await databaseService.updateOrderStatus(
           orderId,
-          status
+          status as "pending" | "confirmed" | "preparing" | "ready" | "delivered" | "cancelled"
         );
         if (success) {
           // Recarregar pedidos após atualizar

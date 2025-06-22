@@ -46,7 +46,7 @@ export function SettingsScreen({ navigation }: any) {
   };
 
   const handleNotificationChange = (
-    key: keyof typeof preferences.notifications,
+    key: "orderUpdates" | "promotions" | "newItems",
     value: boolean
   ) => {
     updateNotificationSettings({ [key]: value });
@@ -363,6 +363,22 @@ export function SettingsScreen({ navigation }: any) {
           >
             <Text style={[styles.actionButtonText, { color: colors.primary }]}>
               Trocar de Restaurante
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Seção de Pedidos */}
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
+            Pedidos
+          </Text>
+
+          <TouchableOpacity
+            style={[styles.actionButton, { borderColor: colors.primary }]}
+            onPress={() => navigation.navigate("OrderHistory")}
+          >
+            <Text style={[styles.actionButtonText, { color: colors.primary }]}>
+              Histórico de Pedidos
             </Text>
           </TouchableOpacity>
         </View>
