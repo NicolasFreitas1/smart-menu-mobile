@@ -121,7 +121,7 @@ export function ReservationScreen({ navigation }: any) {
           },
         });
 
-        // Agendar lembretes automáticos
+        // Agendar lembretes de notificação
         await scheduleReservationReminders(newReservation);
 
         Alert.alert("Sucesso", "Reserva criada com sucesso!");
@@ -237,14 +237,17 @@ export function ReservationScreen({ navigation }: any) {
       if (oneDayBefore > new Date()) {
         await pushNotificationService.scheduleNotification({
           title: "Lembrete de Reserva - Amanhã 📅",
-          body: `Sua reserva no ${reservation.restaurantName} está marcada para amanhã às ${reservation.time}.`,
+          body: `Sua reserva no ${restaurant?.name} está marcada para amanhã às ${reservation.time}.`,
           data: {
             type: "reservation_reminder",
             reservationId: reservation.id,
-            restaurantName: reservation.restaurantName,
+            restaurantName: restaurant?.name,
             time: reservation.time,
           },
-          trigger: { date: oneDayBefore },
+          trigger: {
+            type: "date",
+            date: oneDayBefore,
+          },
         });
       }
 
@@ -254,15 +257,18 @@ export function ReservationScreen({ navigation }: any) {
       );
       if (oneHourBefore > new Date()) {
         await pushNotificationService.scheduleNotification({
-          title: "Lembrete de Reserva - 1 hora ⏰",
-          body: `Sua reserva no ${reservation.restaurantName} está marcada para ${reservation.time}. Não se esqueça!`,
+          title: "Lembrete de Reserva - 1 Hora 📅",
+          body: `Sua reserva no ${restaurant?.name} está marcada para daqui 1 hora às ${reservation.time}.`,
           data: {
             type: "reservation_reminder",
             reservationId: reservation.id,
-            restaurantName: reservation.restaurantName,
+            restaurantName: restaurant?.name,
             time: reservation.time,
           },
-          trigger: { date: oneHourBefore },
+          trigger: {
+            type: "date",
+            date: oneHourBefore,
+          },
         });
       }
 
@@ -272,15 +278,18 @@ export function ReservationScreen({ navigation }: any) {
       );
       if (fifteenMinutesBefore > new Date()) {
         await pushNotificationService.scheduleNotification({
-          title: "Sua reserva está chegando! 🚀",
-          body: `Reserva no ${reservation.restaurantName} em 15 minutos. Hora de sair!`,
+          title: "Lembrete de Reserva - 15 Minutos 📅",
+          body: `Sua reserva no ${restaurant?.name} está marcada para daqui 15 minutos às ${reservation.time}.`,
           data: {
             type: "reservation_reminder",
             reservationId: reservation.id,
-            restaurantName: reservation.restaurantName,
+            restaurantName: restaurant?.name,
             time: reservation.time,
           },
-          trigger: { date: fifteenMinutesBefore },
+          trigger: {
+            type: "date",
+            date: fifteenMinutesBefore,
+          },
         });
       }
 

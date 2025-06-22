@@ -29,7 +29,10 @@ export const useReservations = () => {
             restaurantName: reservation.restaurantName,
             time: reservation.time
           },
-          trigger: { date: oneDayBefore }
+          trigger: { 
+            type: 'date',
+            date: oneDayBefore 
+          }
         });
       }
 
@@ -37,15 +40,18 @@ export const useReservations = () => {
       const oneHourBefore = new Date(reservationDate.getTime() - 60 * 60 * 1000);
       if (oneHourBefore > new Date()) {
         await pushNotificationService.scheduleNotification({
-          title: 'Lembrete de Reserva - 1 hora ⏰',
-          body: `Sua reserva no ${reservation.restaurantName} está marcada para ${reservation.time}. Não se esqueça!`,
+          title: 'Lembrete de Reserva - 1 Hora 📅',
+          body: `Sua reserva no ${reservation.restaurantName} está marcada para daqui 1 hora às ${reservation.time}.`,
           data: { 
             type: 'reservation_reminder',
             reservationId: reservation.id,
             restaurantName: reservation.restaurantName,
             time: reservation.time
           },
-          trigger: { date: oneHourBefore }
+          trigger: { 
+            type: 'date',
+            date: oneHourBefore 
+          }
         });
       }
 
@@ -53,21 +59,22 @@ export const useReservations = () => {
       const fifteenMinutesBefore = new Date(reservationDate.getTime() - 15 * 60 * 1000);
       if (fifteenMinutesBefore > new Date()) {
         await pushNotificationService.scheduleNotification({
-          title: 'Sua reserva está chegando! 🚀',
-          body: `Reserva no ${reservation.restaurantName} em 15 minutos. Hora de sair!`,
+          title: 'Lembrete de Reserva - 15 Minutos 📅',
+          body: `Sua reserva no ${reservation.restaurantName} está marcada para daqui 15 minutos às ${reservation.time}.`,
           data: { 
             type: 'reservation_reminder',
             reservationId: reservation.id,
             restaurantName: reservation.restaurantName,
             time: reservation.time
           },
-          trigger: { date: fifteenMinutesBefore }
+          trigger: { 
+            type: 'date',
+            date: fifteenMinutesBefore 
+          }
         });
       }
-
-      console.log('✅ Lembretes de reserva agendados com sucesso');
     } catch (error) {
-      console.error('❌ Erro ao agendar lembretes:', error);
+      console.error('Erro ao agendar lembretes de reserva:', error);
     }
   }, []);
 

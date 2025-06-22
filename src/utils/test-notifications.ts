@@ -11,12 +11,11 @@ export class NotificationTester {
    */
   static async testImmediateNotification(): Promise<void> {
     try {
-      await pushNotificationService.sendCustomNotification({
-        title: 'Teste Imediato 🔔',
-        body: 'Esta notificação foi enviada imediatamente!',
-        type: 'test',
-        data: { type: 'test_immediate' },
-        priority: 'default',
+      await pushNotificationService.sendNotification({
+        title: 'Teste de Notificação 🧪',
+        body: 'Esta é uma notificação de teste imediata',
+        type: 'promotion',
+        data: { test: true }
       });
       console.log('✅ Notificação imediata enviada');
     } catch (error) {
@@ -29,13 +28,16 @@ export class NotificationTester {
    */
   static async testScheduledNotification(): Promise<void> {
     try {
-      const fiveSecondsFromNow = new Date(Date.now() + TEST_CONFIG.test_notification_delay);
+      const fiveSecondsFromNow = new Date(Date.now() + 5 * 1000);
       
       await pushNotificationService.scheduleNotification({
         title: 'Teste Agendado ⏰',
-        body: 'Esta notificação foi agendada para 5 segundos!',
-        data: { type: 'test_scheduled' },
-        trigger: { date: fiveSecondsFromNow }
+        body: 'Esta notificação foi agendada para 5 segundos',
+        data: { test: true, scheduled: true },
+        trigger: { 
+          type: 'date',
+          date: fiveSecondsFromNow 
+        }
       });
       
       console.log('✅ Notificação agendada para 5 segundos');
@@ -49,41 +51,42 @@ export class NotificationTester {
    */
   static async testReservationNotification(): Promise<void> {
     try {
-      // Notificação imediata de criação
+      const oneMinuteFromNow = new Date(Date.now() + 60 * 1000);
+      const twoMinutesFromNow = new Date(Date.now() + 2 * 60 * 1000);
+
+      // Notificação de reserva criada
       await pushNotificationService.sendReservationCreatedNotification(
         'Restaurante Teste',
         '25/12/2024',
-        '19:00',
-        'test-reservation-id'
+        '19:00'
       );
 
-      // Agendar lembretes
-      const now = new Date();
-      const oneMinuteFromNow = new Date(now.getTime() + 60 * 1000);
-      const twoMinutesFromNow = new Date(now.getTime() + 2 * 60 * 1000);
-
-      // Lembrete em 1 minuto
+      // Notificação de lembrete de reserva
       await pushNotificationService.scheduleNotification({
-        title: 'Lembrete de Reserva ⏰',
-        body: 'Sua reserva no Restaurante Teste está marcada para 19:00.',
+        title: 'Lembrete de Reserva - Teste 📅',
+        body: 'Sua reserva de teste está marcada para daqui 1 minuto',
         data: { 
           type: 'reservation_reminder',
-          restaurantName: 'Restaurante Teste',
-          time: '19:00'
+          test: true 
         },
-        trigger: { date: oneMinuteFromNow }
+        trigger: { 
+          type: 'date',
+          date: oneMinuteFromNow 
+        }
       });
 
-      // Lembrete em 2 minutos
+      // Notificação de lembrete de reserva 2
       await pushNotificationService.scheduleNotification({
-        title: 'Sua reserva está chegando! 🚀',
-        body: 'Reserva no Restaurante Teste em breve. Hora de sair!',
+        title: 'Lembrete de Reserva - Teste 2 📅',
+        body: 'Sua reserva de teste está marcada para daqui 2 minutos',
         data: { 
           type: 'reservation_reminder',
-          restaurantName: 'Restaurante Teste',
-          time: '19:00'
+          test: true 
         },
-        trigger: { date: twoMinutesFromNow }
+        trigger: { 
+          type: 'date',
+          date: twoMinutesFromNow 
+        }
       });
 
       console.log('✅ Notificações de reserva testadas');

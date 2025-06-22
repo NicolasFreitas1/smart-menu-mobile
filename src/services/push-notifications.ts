@@ -242,8 +242,8 @@ class PushNotificationService {
     }
   }
 
-  // Enviar notificação personalizada com ícone e cor
-  async sendCustomNotification(notification: {
+  // Enviar notificação imediata
+  async sendNotification(notification: {
     title: string;
     body: string;
     type: 'reservation_created' | 'reservation_reminder' | 'proximity' | 'order_update' | 'promotion';
@@ -254,77 +254,25 @@ class PushNotificationService {
     priority?: 'default' | 'normal' | 'high';
   }): Promise<void> {
     try {
-      const notificationContent = {
-        title: notification.title,
-        body: notification.body,
-        data: {
-          type: notification.type,
-          ...notification.data,
-        },
-        sound: 'default', // Sempre usar som padrão
-        priority: notification.priority || 'default',
-        // Usar ícone personalizado do app
-        icon: APP_CONFIG.notification.icon,
-        // Personalizações específicas por tipo
-        ...this.getNotificationCustomization(notification.type),
-      };
-
       await Notifications.scheduleNotificationAsync({
-        content: notificationContent,
-        trigger: null, // Enviar imediatamente
+        content: {
+          title: notification.title,
+          body: notification.body,
+          data: notification.data || {},
+          sound: notification.sound !== false, // Sempre usar som padrão
+          priority: notification.priority || 'normal',
+          ...this.getNotificationCustomization(notification.type),
+        },
+        trigger: null, // Notificação imediata
       });
 
-      console.log(`✅ Notificação personalizada enviada: ${notification.type}`);
+      console.log('✅ Notificação enviada:', notification.title);
     } catch (error) {
-      console.error('❌ Erro ao enviar notificação personalizada:', error);
+      console.error('❌ Erro ao enviar notificação:', error);
     }
   }
 
-  // Obter personalização específica por tipo de notificação
-  private getNotificationCustomization(type: string) {
-    switch (type) {
-      case 'reservation_created':
-        return {
-          // Som específico para reservas (se disponível)
-          sound: 'notification_success.wav',
-          // Badge para indicar nova reserva
-          badge: 1,
-        };
-      case 'reservation_reminder':
-        return {
-          // Som de alerta para lembretes
-          sound: 'notification_reminder.wav',
-          // Prioridade alta para lembretes
-          priority: 'high' as const,
-        };
-      case 'proximity':
-        return {
-          // Som suave para proximidade
-          sound: 'notification_proximity.wav',
-          // Sem badge para não poluir
-          badge: 0,
-        };
-      case 'order_update':
-        return {
-          // Som de atualização
-          sound: 'notification_update.wav',
-          badge: 1,
-        };
-      case 'promotion':
-        return {
-          // Som de promoção
-          sound: 'notification_promotion.wav',
-          badge: 0,
-        };
-      default:
-        return {
-          sound: true,
-          badge: 0,
-        };
-    }
-  }
-
-  // Enviar notificação agendada
+  // Agendar notificação
   async scheduleNotification(notification: {
     title: string;
     body: string;
@@ -337,13 +285,13 @@ class PushNotificationService {
           title: notification.title,
           body: notification.body,
           data: notification.data || {},
-          sound: 'default', // Som padrão do sistema
-          icon: APP_CONFIG.notification.icon,
+          sound: true, // Sempre usar som padrão
+          priority: 'normal',
         },
         trigger: notification.trigger,
       });
 
-      console.log('✅ Notificação agendada');
+      console.log('✅ Notificação agendada:', notification.title);
     } catch (error) {
       console.error('❌ Erro ao agendar notificação:', error);
     }
@@ -431,7 +379,7 @@ class PushNotificationService {
     reservationId: string
   ): Promise<void> {
     try {
-      await this.sendCustomNotification({
+      await this.sendNotification({
         title: 'Lembrete de Reserva ⏰',
         body: `Sua reserva no ${restaurantName} está marcada para ${time}. Não se esqueça!`,
         type: 'reservation_reminder',
@@ -455,7 +403,7 @@ class PushNotificationService {
     message: string
   ): Promise<void> {
     try {
-      await this.sendCustomNotification({
+      await this.sendNotification({
         title: `Promoção - ${restaurantName} 🎉`,
         body: message,
         type: 'proximity',
@@ -479,7 +427,7 @@ class PushNotificationService {
     reservationId: string
   ): Promise<void> {
     try {
-      await this.sendCustomNotification({
+      await this.sendNotification({
         title: 'Reserva Criada com Sucesso! 🎉',
         body: `Sua reserva no ${restaurantName} para ${date} às ${time} foi criada e adicionada ao seu calendário.`,
         type: 'reservation_created',
@@ -515,7 +463,7 @@ class PushNotificationService {
 
       const message = statusMessages[status as keyof typeof statusMessages] || 'foi atualizado';
 
-      await this.sendCustomNotification({
+      await this.sendNotification({
         title: 'Atualização do Pedido 📋',
         body: `Seu pedido no ${restaurantName} ${message}.`,
         type: 'order_update',
@@ -540,7 +488,7 @@ class PushNotificationService {
     promotionData?: any
   ): Promise<void> {
     try {
-      await this.sendCustomNotification({
+      await this.sendNotification({
         title: `Promoção Especial! ${title}`,
         body: message,
         type: 'promotion',
@@ -553,6 +501,50 @@ class PushNotificationService {
       console.log('✅ Notificação de promoção enviada');
     } catch (error) {
       console.error('❌ Erro ao enviar notificação de promoção:', error);
+    }
+  }
+
+  // Obter personalização específica por tipo de notificação
+  private getNotificationCustomization(type: string) {
+    switch (type) {
+      case 'reservation_created':
+        return {
+          // Som específico para reservas (se disponível)
+          sound: 'notification_success.wav',
+          // Badge para indicar nova reserva
+          badge: 1,
+        };
+      case 'reservation_reminder':
+        return {
+          // Som de alerta para lembretes
+          sound: 'notification_reminder.wav',
+          // Prioridade alta para lembretes
+          priority: 'high' as const,
+        };
+      case 'proximity':
+        return {
+          // Som suave para proximidade
+          sound: 'notification_proximity.wav',
+          // Sem badge para não poluir
+          badge: 0,
+        };
+      case 'order_update':
+        return {
+          // Som de atualização
+          sound: 'notification_update.wav',
+          badge: 1,
+        };
+      case 'promotion':
+        return {
+          // Som de promoção
+          sound: 'notification_promotion.wav',
+          badge: 0,
+        };
+      default:
+        return {
+          sound: true,
+          badge: 0,
+        };
     }
   }
 }
