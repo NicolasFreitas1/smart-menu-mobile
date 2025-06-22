@@ -11,6 +11,7 @@ import { useTheme } from "../../theme/theme-provider";
 import { useCartScreen } from "../../hooks/use-cart";
 import { CartEmpty } from "../../components/cart/cart-empty";
 import { SafeContainer } from "../../components/ui/safe-container";
+import { NavigationBarSafeArea } from "../../components/ui/navigation-bar-safe-area";
 import { OrderSummary } from "../../components/order-summary";
 import { formatCurrency } from "../../lib/format";
 
@@ -38,8 +39,8 @@ export function CartScreen() {
   };
 
   return (
-    <SafeContainer>
-      <View style={localStyles.container}>
+    <SafeContainer considerNavigationBar={true}>
+      <NavigationBarSafeArea style={localStyles.container}>
         <Text style={[styles.title, localStyles.headerTitle]}>
           Seu Carrinho
         </Text>
@@ -135,7 +136,7 @@ export function CartScreen() {
             onClearCart={handleClearCart}
           />
         </ScrollView>
-      </View>
+      </NavigationBarSafeArea>
     </SafeContainer>
   );
 }

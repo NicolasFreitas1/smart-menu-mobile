@@ -1,6 +1,8 @@
 import React from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createStackNavigator } from "@react-navigation/stack";
+import { Platform } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Feather from "react-native-vector-icons/Feather";
 import FontAwesome5 from "react-native-vector-icons/FontAwesome5";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
@@ -82,6 +84,13 @@ function HomeStack() {
 
 export function AppNavigator() {
   const { colors, isDark } = useTheme();
+  const insets = useSafeAreaInsets();
+
+  // Calcular altura do tab bar considerando a navigation bar
+  const tabBarHeight =
+    Platform.OS === "android"
+      ? 64 + (insets.bottom > 0 ? insets.bottom : 16)
+      : 64;
 
   return (
     <Tab.Navigator
@@ -90,12 +99,23 @@ export function AppNavigator() {
         tabBarShowLabel: false,
         tabBarStyle: {
           position: "absolute",
-          height: 64,
+          height: tabBarHeight,
           borderTopWidth: 1,
           borderTopColor: colors.border,
           backgroundColor: colors.card,
-          paddingBottom: 8,
+          paddingBottom:
+            Platform.OS === "android"
+              ? insets.bottom > 0
+                ? insets.bottom
+                : 16
+              : 8,
           paddingTop: 8,
+          // Adicionar sombra para destacar do conteúdo
+          elevation: 8,
+          shadowColor: isDark ? "#000" : "#222",
+          shadowOffset: { width: 0, height: -2 },
+          shadowOpacity: 0.1,
+          shadowRadius: 4,
         },
         tabBarIconStyle: {
           justifyContent: "center",
