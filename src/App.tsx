@@ -2,13 +2,18 @@ import React, { useEffect, useState } from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { StatusBar } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import { AppNavigator } from "./navigation/AppNavigator";
+import { MainNavigator } from "./navigation/MainNavigator";
 import { ThemeProvider, useTheme } from "./theme/theme-provider";
 import { RestaurantProvider } from "./context/RestaurantContext";
 import { CartProvider } from "./context/CartContext";
 import { AuthProvider } from "./context/AuthContext";
-import { databaseService } from "./services/database";
-import { getRestaurantId } from "./config/app-config";
+import { pushNotificationService } from "./services/push-notifications";
+import { offlineSyncService } from "./services/offline-sync";
+import {
+  cleanupStorage,
+  cleanupCorruptedReservations,
+} from "./utils/storage-cleanup";
+import { useAppInitialization } from "./hooks/use-app-initialization";
 
 function AppContent() {
   const { isDark, colors } = useTheme();
@@ -50,48 +55,60 @@ function AppContent() {
           },
         }}
       >
-        <AppNavigator />
+        <MainNavigator />
       </NavigationContainer>
     </>
   );
 }
 
 export default function App() {
-  const [isDatabaseReady, setIsDatabaseReady] = useState(false);
-  const [databaseError, setDatabaseError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const { isInitialized } = useAppInitialization();
 
   useEffect(() => {
-    initializeDatabase();
+    const initializeServices = async () => {
+      try {
+        console.log("🚀 Iniciando Smart Menu Mobile...");
+
+        // Limpeza do storage para resolver problemas de JSON corrompido
+        console.log("🧹 Verificando e limpando storage...");
+        await cleanupStorage();
+
+        // Limpeza específica de reservas corrompidas
+        console.log("📅 Verificando dados de reservas...");
+        await cleanupCorruptedReservations();
+
+        // Inicializar serviços
+        console.log("🔧 Inicializando serviços...");
+        await Promise.all([
+          offlineSyncService.initialize(),
+          pushNotificationService.initialize(),
+        ]);
+
+        console.log("✅ Aplicação inicializada com sucesso!");
+      } catch (error) {
+        console.error("❌ Erro na inicialização:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    initializeServices();
   }, []);
 
-  const initializeDatabase = async () => {
-    try {
-      await databaseService.init();
-      setIsDatabaseReady(true);
-      console.log("Aplicação inicializada com sucesso");
-    } catch (error) {
-      console.error("Erro ao inicializar banco de dados:", error);
-      setDatabaseError(
-        error instanceof Error ? error.message : "Erro desconhecido"
-      );
-      // Mesmo com erro no banco, a aplicação pode continuar funcionando
-      setIsDatabaseReady(true);
-    }
-  };
-
-  if (!isDatabaseReady) {
-    return null; // Ou um loading screen
+  if (isLoading || !isInitialized) {
+    return null; // Tela de loading pode ser adicionada aqui
   }
 
   return (
     <SafeAreaProvider>
       <ThemeProvider>
         <AuthProvider>
-          <CartProvider>
-            <RestaurantProvider restaurantId={getRestaurantId()}>
+          <RestaurantProvider>
+            <CartProvider>
               <AppContent />
-            </RestaurantProvider>
-          </CartProvider>
+            </CartProvider>
+          </RestaurantProvider>
         </AuthProvider>
       </ThemeProvider>
     </SafeAreaProvider>

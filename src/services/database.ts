@@ -51,6 +51,22 @@ export interface Notification {
   data?: any;
 }
 
+export interface Reservation {
+  id: string;
+  restaurantId: string;
+  restaurantName: string;
+  date: string;
+  time: string;
+  partySize: number;
+  customerName: string;
+  customerPhone: string;
+  customerEmail?: string;
+  specialRequests?: string;
+  status: "pending" | "confirmed" | "cancelled" | "completed";
+  createdAt: string;
+  updatedAt: string;
+}
+
 // Interface para compatibilidade entre SQLite e AsyncStorage
 interface DatabaseRecord {
   id: string;
@@ -93,6 +109,21 @@ interface NotificationRecord extends DatabaseRecord {
   isRead: number;
   createdAt: string;
   data?: string;
+}
+
+interface ReservationRecord extends DatabaseRecord {
+  restaurantId: string;
+  restaurantName: string;
+  date: string;
+  time: string;
+  partySize: number;
+  customerName: string;
+  customerPhone: string;
+  customerEmail?: string;
+  specialRequests?: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 // Classe principal do banco de dados
@@ -180,6 +211,22 @@ class DatabaseService {
         data TEXT
       );
 
+      CREATE TABLE IF NOT EXISTS reservations (
+        id TEXT PRIMARY KEY,
+        restaurantId TEXT NOT NULL,
+        restaurantName TEXT NOT NULL,
+        date TEXT NOT NULL,
+        time TEXT NOT NULL,
+        partySize INTEGER NOT NULL,
+        customerName TEXT NOT NULL,
+        customerPhone TEXT NOT NULL,
+        customerEmail TEXT,
+        specialRequests TEXT,
+        status TEXT NOT NULL,
+        createdAt TEXT NOT NULL,
+        updatedAt TEXT NOT NULL
+      );
+
       CREATE INDEX IF NOT EXISTS idx_orders_restaurant ON orders (restaurantId);
       CREATE INDEX IF NOT EXISTS idx_orders_date ON orders (orderDate);
       CREATE INDEX IF NOT EXISTS idx_orders_status ON orders (status);
@@ -187,6 +234,10 @@ class DatabaseService {
       CREATE INDEX IF NOT EXISTS idx_reviews_order ON reviews (orderId);
       CREATE INDEX IF NOT EXISTS idx_notifications_read ON notifications (isRead);
       CREATE INDEX IF NOT EXISTS idx_notifications_created ON notifications (createdAt);
+      CREATE INDEX IF NOT EXISTS idx_reservations_restaurant ON reservations (restaurantId);
+      CREATE INDEX IF NOT EXISTS idx_reservations_date ON reservations (date);
+      CREATE INDEX IF NOT EXISTS idx_reservations_status ON reservations (status);
+      CREATE INDEX IF NOT EXISTS idx_reservations_customer ON reservations (customerName);
     `;
 
     await this.db.execAsync(createTablesSQL);
@@ -293,7 +344,7 @@ class DatabaseService {
     offset: number = 0
   ): Promise<OrderRecord[]> {
     try {
-      const ordersJson = await storageService.getItem("sqlite_orders");
+      const ordersJson = await storageService.getItem<string>("sqlite_orders");
       if (!ordersJson) return [];
 
       const orders: OrderRecord[] = JSON.parse(ordersJson);
@@ -311,7 +362,7 @@ class DatabaseService {
 
   private async getOrderItemsFromStorage(): Promise<OrderItemRecord[]> {
     try {
-      const itemsJson = await storageService.getItem("sqlite_order_items");
+      const itemsJson = await storageService.getItem<string>("sqlite_order_items");
       return itemsJson ? JSON.parse(itemsJson) : [];
     } catch (error) {
       console.error("Erro ao buscar itens do storage:", error);
@@ -476,7 +527,7 @@ class DatabaseService {
 
   private async getReviewsFromStorage(): Promise<ReviewRecord[]> {
     try {
-      const reviewsJson = await storageService.getItem("sqlite_reviews");
+      const reviewsJson = await storageService.getItem<string>("sqlite_reviews");
       return reviewsJson ? JSON.parse(reviewsJson) : [];
     } catch (error) {
       console.error("Erro ao buscar avaliações do storage:", error);
@@ -550,7 +601,7 @@ class DatabaseService {
         [dishId]
       );
 
-      return result?.average || 0;
+      return (result as any)?.average || 0;
     } catch (error) {
       console.error("Erro ao calcular média de avaliações:", error);
       return 0;
@@ -634,7 +685,7 @@ class DatabaseService {
     offset: number = 0
   ): Promise<NotificationRecord[]> {
     try {
-      const notificationsJson = await storageService.getItem(
+      const notificationsJson = await storageService.getItem<string>(
         "sqlite_notifications"
       );
       if (!notificationsJson) return [];
@@ -744,7 +795,7 @@ class DatabaseService {
       const result = await this.db.getFirstAsync(
         "SELECT COUNT(*) as count FROM notifications WHERE isRead = 0"
       );
-      return result?.count || 0;
+      return (result as any)?.count || 0;
     } catch (error) {
       console.error("Erro ao contar notificações não lidas:", error);
       return 0;
@@ -781,11 +832,11 @@ class DatabaseService {
       );
 
       return {
-        totalOrders: totalOrdersResult?.count || 0,
-        totalSpent: totalSpentResult?.total || 0,
-        averageOrderValue: averageResult?.average || 0,
+        totalOrders: (totalOrdersResult as any)?.count || 0,
+        totalSpent: (totalSpentResult as any)?.total || 0,
+        averageOrderValue: (averageResult as any)?.average || 0,
         favoriteRestaurant:
-          favoriteRestaurantResult?.restaurantName || "Nenhum",
+          (favoriteRestaurantResult as any)?.restaurantName || "Nenhum",
       };
     } catch (error) {
       console.error("Erro ao buscar estatísticas:", error);
@@ -1048,9 +1099,300 @@ class DatabaseService {
 
   // Fecha a conexão com o banco
   async close(): Promise<void> {
-    if (this.db) {
+    if (this.db && !this.isWeb) {
       await this.db.closeAsync();
-      this.db = null;
+    }
+  }
+
+  // ===== MÉTODOS PARA RESERVAS =====
+
+  // Salva uma nova reserva
+  async saveReservation(reservation: ReservationRecord): Promise<boolean> {
+    try {
+      if (this.isWeb || !this.db) {
+        return await this.saveReservationToStorage(reservation);
+      }
+
+      const sql = `
+        INSERT INTO reservations (
+          id, restaurantId, restaurantName, date, time, partySize,
+          customerName, customerPhone, customerEmail, specialRequests,
+          status, createdAt, updatedAt
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `;
+
+      await this.db.runAsync(sql, [
+        reservation.id,
+        reservation.restaurantId,
+        reservation.restaurantName,
+        reservation.date,
+        reservation.time,
+        reservation.partySize,
+        reservation.customerName,
+        reservation.customerPhone,
+        reservation.customerEmail || null,
+        reservation.specialRequests || null,
+        reservation.status,
+        reservation.createdAt,
+        reservation.updatedAt,
+      ]);
+
+      return true;
+    } catch (error) {
+      console.error("❌ Erro ao salvar reserva:", error);
+      return false;
+    }
+  }
+
+  // Busca todas as reservas
+  async getReservations(limit: number = 100, offset: number = 0): Promise<ReservationRecord[]> {
+    try {
+      if (this.isWeb || !this.db) {
+        return await this.getReservationsFromStorage(limit, offset);
+      }
+
+      const sql = `
+        SELECT * FROM reservations 
+        ORDER BY createdAt DESC 
+        LIMIT ? OFFSET ?
+      `;
+
+      const result = await this.db.getAllAsync(sql, [limit, offset]);
+      return result as ReservationRecord[];
+    } catch (error) {
+      console.error("❌ Erro ao buscar reservas:", error);
+      return [];
+    }
+  }
+
+  // Busca reserva por ID
+  async getReservationById(reservationId: string): Promise<ReservationRecord | null> {
+    try {
+      if (this.isWeb || !this.db) {
+        return await this.getReservationByIdFromStorage(reservationId);
+      }
+
+      const sql = `SELECT * FROM reservations WHERE id = ?`;
+      const result = await this.db.getFirstAsync(sql, [reservationId]);
+      return result as ReservationRecord | null;
+    } catch (error) {
+      console.error("❌ Erro ao buscar reserva por ID:", error);
+      return null;
+    }
+  }
+
+  // Atualiza status de uma reserva
+  async updateReservationStatus(reservationId: string, status: string): Promise<boolean> {
+    try {
+      if (this.isWeb || !this.db) {
+        return await this.updateReservationStatusInStorage(reservationId, status);
+      }
+
+      const sql = `
+        UPDATE reservations 
+        SET status = ?, updatedAt = ? 
+        WHERE id = ?
+      `;
+
+      await this.db.runAsync(sql, [status, new Date().toISOString(), reservationId]);
+      return true;
+    } catch (error) {
+      console.error("❌ Erro ao atualizar status da reserva:", error);
+      return false;
+    }
+  }
+
+  // Busca reservas por restaurante
+  async getReservationsByRestaurant(restaurantId: string): Promise<ReservationRecord[]> {
+    try {
+      if (this.isWeb || !this.db) {
+        return await this.getReservationsByRestaurantFromStorage(restaurantId);
+      }
+
+      const sql = `
+        SELECT * FROM reservations 
+        WHERE restaurantId = ? 
+        ORDER BY date DESC, time DESC
+      `;
+
+      const result = await this.db.getAllAsync(sql, [restaurantId]);
+      return result as ReservationRecord[];
+    } catch (error) {
+      console.error("❌ Erro ao buscar reservas por restaurante:", error);
+      return [];
+    }
+  }
+
+  // Busca reservas por status
+  async getReservationsByStatus(status: string): Promise<ReservationRecord[]> {
+    try {
+      if (this.isWeb || !this.db) {
+        return await this.getReservationsByStatusFromStorage(status);
+      }
+
+      const sql = `
+        SELECT * FROM reservations 
+        WHERE status = ? 
+        ORDER BY date DESC, time DESC
+      `;
+
+      const result = await this.db.getAllAsync(sql, [status]);
+      return result as ReservationRecord[];
+    } catch (error) {
+      console.error("❌ Erro ao buscar reservas por status:", error);
+      return [];
+    }
+  }
+
+  // Busca reservas próximas (próximas 24h)
+  async getUpcomingReservations(): Promise<ReservationRecord[]> {
+    try {
+      if (this.isWeb || !this.db) {
+        return await this.getUpcomingReservationsFromStorage();
+      }
+
+      const now = new Date();
+      const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+      const tomorrowStr = tomorrow.toISOString().split('T')[0];
+
+      const sql = `
+        SELECT * FROM reservations 
+        WHERE date >= ? AND status = 'confirmed'
+        ORDER BY date ASC, time ASC
+      `;
+
+      const result = await this.db.getAllAsync(sql, [tomorrowStr]);
+      return result as ReservationRecord[];
+    } catch (error) {
+      console.error("❌ Erro ao buscar reservas próximas:", error);
+      return [];
+    }
+  }
+
+  // Remove uma reserva
+  async deleteReservation(reservationId: string): Promise<boolean> {
+    try {
+      if (this.isWeb || !this.db) {
+        return await this.deleteReservationFromStorage(reservationId);
+      }
+
+      const sql = `DELETE FROM reservations WHERE id = ?`;
+      await this.db.runAsync(sql, [reservationId]);
+      return true;
+    } catch (error) {
+      console.error("❌ Erro ao deletar reserva:", error);
+      return false;
+    }
+  }
+
+  // ===== MÉTODOS DE FALLBACK PARA ASYNCSTORAGE =====
+
+  private async saveReservationToStorage(reservation: ReservationRecord): Promise<boolean> {
+    try {
+      const reservations = await this.getReservationsFromStorage();
+      reservations.push(reservation);
+      await storageService.setItem('reservations', JSON.stringify(reservations));
+      return true;
+    } catch (error) {
+      console.error("❌ Erro ao salvar reserva no storage:", error);
+      return false;
+    }
+  }
+
+  private async getReservationsFromStorage(limit: number = 100, offset: number = 0): Promise<ReservationRecord[]> {
+    try {
+      const reservationsJson = await storageService.getItem<string>('reservations');
+      if (!reservationsJson) return [];
+      
+      const reservations: ReservationRecord[] = JSON.parse(reservationsJson);
+      return reservations.slice(offset, offset + limit);
+    } catch (error) {
+      console.error("❌ Erro ao buscar reservas do storage:", error);
+      return [];
+    }
+  }
+
+  private async getReservationByIdFromStorage(reservationId: string): Promise<ReservationRecord | null> {
+    try {
+      const reservations = await this.getReservationsFromStorage();
+      return reservations.find(r => r.id === reservationId) || null;
+    } catch (error) {
+      console.error("❌ Erro ao buscar reserva por ID do storage:", error);
+      return null;
+    }
+  }
+
+  private async updateReservationStatusInStorage(reservationId: string, status: string): Promise<boolean> {
+    try {
+      const reservations = await this.getReservationsFromStorage();
+      const index = reservations.findIndex(r => r.id === reservationId);
+      if (index >= 0) {
+        reservations[index].status = status;
+        reservations[index].updatedAt = new Date().toISOString();
+        await storageService.setItem('reservations', JSON.stringify(reservations));
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error("❌ Erro ao atualizar status da reserva no storage:", error);
+      return false;
+    }
+  }
+
+  private async getReservationsByRestaurantFromStorage(restaurantId: string): Promise<ReservationRecord[]> {
+    try {
+      const reservations = await this.getReservationsFromStorage();
+      return reservations.filter(r => r.restaurantId === restaurantId);
+    } catch (error) {
+      console.error("❌ Erro ao buscar reservas por restaurante do storage:", error);
+      return [];
+    }
+  }
+
+  private async getReservationsByStatusFromStorage(status: string): Promise<ReservationRecord[]> {
+    try {
+      const reservations = await this.getReservationsFromStorage();
+      return reservations.filter(r => r.status === status);
+    } catch (error) {
+      console.error("❌ Erro ao buscar reservas por status do storage:", error);
+      return [];
+    }
+  }
+
+  private async getUpcomingReservationsFromStorage(): Promise<ReservationRecord[]> {
+    try {
+      const reservations = await this.getReservationsFromStorage();
+      const now = new Date();
+      const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+
+      return reservations.filter(reservation => {
+        try {
+          const [day, month, year] = reservation.date.split('/').map(Number);
+          const [hour, minute] = reservation.time.split(':').map(Number);
+          const reservationDate = new Date(year, month - 1, day, hour, minute);
+          
+          return reservationDate >= now && 
+                 reservationDate <= tomorrow && 
+                 reservation.status === 'confirmed';
+        } catch (error) {
+          return false;
+        }
+      });
+    } catch (error) {
+      console.error("❌ Erro ao buscar reservas próximas do storage:", error);
+      return [];
+    }
+  }
+
+  private async deleteReservationFromStorage(reservationId: string): Promise<boolean> {
+    try {
+      const reservations = await this.getReservationsFromStorage();
+      const filtered = reservations.filter(r => r.id !== reservationId);
+      await storageService.setItem('reservations', JSON.stringify(filtered));
+      return true;
+    } catch (error) {
+      console.error("❌ Erro ao deletar reserva do storage:", error);
+      return false;
     }
   }
 }

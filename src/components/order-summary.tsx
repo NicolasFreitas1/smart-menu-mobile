@@ -2,27 +2,24 @@ import React, { useState } from "react";
 import {
   View,
   Text,
-  TouchableOpacity,
   StyleSheet,
   Alert,
   ActivityIndicator,
+  TouchableOpacity,
 } from "react-native";
 import { useTheme } from "../theme/theme-provider";
 import { useCart } from "../context/CartContext";
 import { useRestaurant } from "../context/RestaurantContext";
 import { useOrders } from "../hooks/use-orders";
 import { useNotifications } from "../hooks/use-notifications";
-import { formatCurrency } from "../lib/format";
-import { Order, OrderItem } from "../services/database";
 import Feather from "react-native-vector-icons/Feather";
-import { storageService } from "../services/storage";
-import { Button } from "./ui/button";
 
 interface CartItem {
   id: string;
   name: string;
   price: number;
   quantity: number;
+  description?: string;
   observations?: string;
 }
 
@@ -30,6 +27,7 @@ interface OrderSummaryProps {
   cartItems: CartItem[];
   totalPrice: number;
   onOrderComplete?: (orderId: string) => void;
+  onClearCart?: () => void;
 }
 
 // Função para gerar ID único
@@ -46,6 +44,7 @@ export const OrderSummary: React.FC<OrderSummaryProps> = ({
   cartItems,
   totalPrice,
   onOrderComplete,
+  onClearCart,
 }) => {
   const { colors } = useTheme();
   const { clearCartDirectly } = useCart();
@@ -67,13 +66,13 @@ export const OrderSummary: React.FC<OrderSummaryProps> = ({
       // Criar pedido
       const order = {
         id: generateOrderId(),
-        restaurantId: "rest-123", // Você pode pegar isso do contexto do restaurante
-        restaurantName: "Restaurante Exemplo", // Você pode pegar isso do contexto do restaurante
+        restaurantId: restaurant?.id || "rest-123",
+        restaurantName: restaurant?.name || "Restaurante Exemplo",
         totalAmount: totalPrice,
-        status: "pending",
+        status: "pending" as const,
         orderDate: new Date().toISOString(),
-        paymentMethod: "card", // Você pode deixar o usuário escolher
-        notes: "", // Você pode deixar o usuário adicionar observações
+        paymentMethod: "card" as const,
+        notes: "",
       };
 
       // Criar itens do pedido
@@ -100,7 +99,7 @@ export const OrderSummary: React.FC<OrderSummaryProps> = ({
         );
 
         // Limpar carrinho
-        await storageService.clearCart();
+        clearCartDirectly();
 
         // Chamar callback de sucesso
         onOrderComplete?.(order.id);
@@ -135,10 +134,10 @@ export const OrderSummary: React.FC<OrderSummaryProps> = ({
           size={48}
           color={colors.mutedForeground}
         />
-        <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
+        <Text style={[styles.emptyText, { color: colors.secondary }]}>
           Seu carrinho está vazio
         </Text>
-        <Text style={[styles.emptySubtext, { color: colors.textSecondary }]}>
+        <Text style={[styles.emptySubtext, { color: colors.secondary }]}>
           Adicione itens para finalizar um pedido
         </Text>
       </View>
@@ -146,28 +145,39 @@ export const OrderSummary: React.FC<OrderSummaryProps> = ({
   }
 
   return (
-    <View className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-      <Text className="text-lg font-semibold mb-4">Resumo do Pedido</Text>
+    <View style={[styles.container, { backgroundColor: colors.card }]}>
+      <Text style={[styles.title, { color: colors.foreground }]}>
+        Resumo do Pedido
+      </Text>
 
       {/* Lista de itens */}
-      <View className="mb-4">
+      <View style={styles.itemsContainer}>
         {cartItems.map((item, index) => (
-          <View
-            key={index}
-            className="flex-row justify-between items-center py-2 border-b border-gray-100"
-          >
-            <View className="flex-1">
-              <Text className="font-medium">{item.name}</Text>
-              <Text className="text-sm text-gray-600">
+          <View key={index} style={styles.itemRow}>
+            <View style={styles.itemInfo}>
+              <Text style={[styles.itemName, { color: colors.foreground }]}>
+                {item.name}
+              </Text>
+              <Text
+                style={[
+                  styles.itemObservations,
+                  { color: colors.mutedForeground },
+                ]}
+              >
                 {item.quantity}x R$ {item.price.toFixed(2)}
               </Text>
               {item.observations && (
-                <Text className="text-xs text-gray-500 italic">
+                <Text
+                  style={[
+                    styles.itemObservations,
+                    { color: colors.mutedForeground },
+                  ]}
+                >
                   Obs: {item.observations}
                 </Text>
               )}
             </View>
-            <Text className="font-semibold">
+            <Text style={[styles.itemPrice, { color: colors.foreground }]}>
               R$ {(item.price * item.quantity).toFixed(2)}
             </Text>
           </View>
@@ -175,41 +185,73 @@ export const OrderSummary: React.FC<OrderSummaryProps> = ({
       </View>
 
       {/* Total */}
-      <View className="flex-row justify-between items-center py-3 border-t border-gray-200">
-        <Text className="text-lg font-semibold">Total</Text>
-        <Text className="text-lg font-bold text-green-600">
+      <View style={styles.totalContainer}>
+        <Text style={[styles.totalLabel, { color: colors.foreground }]}>
+          Total
+        </Text>
+        <Text style={[styles.totalValue, { color: colors.primary }]}>
           R$ {totalPrice.toFixed(2)}
         </Text>
       </View>
 
+      {/* Botão Limpar Carrinho */}
+      {onClearCart && (
+        <TouchableOpacity
+          onPress={onClearCart}
+          style={[
+            styles.clearCartButton,
+            { backgroundColor: colors.destructive },
+          ]}
+        >
+          <Text
+            style={[
+              styles.clearCartButtonText,
+              { color: colors.primaryForeground },
+            ]}
+          >
+            Limpar Carrinho
+          </Text>
+        </TouchableOpacity>
+      )}
+
       {/* Botão de finalizar */}
-      <Button
+      <TouchableOpacity
         onPress={handleFinishOrder}
         disabled={isProcessing || cartItems.length === 0}
-        className="mt-4"
+        style={{
+          ...styles.finishButton,
+          backgroundColor: colors.primary,
+          opacity: isProcessing ? 0.6 : 1,
+        }}
       >
         {isProcessing ? (
-          <View className="flex-row items-center">
-            <ActivityIndicator size="small" color="white" className="mr-2" />
-            <Text className="text-white font-medium">Processando...</Text>
+          <View style={{ flexDirection: "row", alignItems: "center" }}>
+            <ActivityIndicator
+              size="small"
+              color="white"
+              style={{ marginRight: 8 }}
+            />
+            <Text style={[styles.finishButtonText, { color: "white" }]}>
+              Processando...
+            </Text>
           </View>
         ) : (
-          <Text className="text-white font-medium text-center">
+          <Text style={[styles.finishButtonText, { color: "white" }]}>
             Finalizar Pedido
           </Text>
         )}
-      </Button>
+      </TouchableOpacity>
 
       {/* Informações adicionais */}
-      <View className="mt-4 p-3 bg-blue-50 rounded-lg">
-        <Text className="text-sm text-blue-800">
+      <View style={[styles.infoContainer, { backgroundColor: colors.muted }]}>
+        <Text style={[styles.infoText, { color: colors.foreground }]}>
           💡 Seu pedido será salvo localmente e você receberá notificações sobre
           o status.
         </Text>
       </View>
 
       {restaurant && (
-        <Text style={[styles.restaurantInfo, { color: colors.textSecondary }]}>
+        <Text style={[styles.restaurantInfo, { color: colors.secondary }]}>
           Pedido será enviado para: {restaurant.name}
         </Text>
       )}
@@ -314,5 +356,25 @@ const styles = StyleSheet.create({
   emptySubtext: {
     fontSize: 14,
     textAlign: "center",
+  },
+  infoContainer: {
+    padding: 16,
+    borderRadius: 8,
+  },
+  infoText: {
+    fontSize: 14,
+    fontWeight: "500",
+  },
+  clearCartButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 12,
+    borderRadius: 8,
+    marginBottom: 16,
+  },
+  clearCartButtonText: {
+    fontSize: 16,
+    fontWeight: "600",
   },
 });

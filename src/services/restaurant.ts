@@ -8,8 +8,96 @@ const mockRestaurant: Restaurant = {
   id: "restaurant-1",
   name: "Restaurante Exemplo",
   addressId: "address-1",
+  address: {
+    id: "address-1",
+    cep: "12345-678",
+    street: "Rua das Flores",
+    number: "123",
+    city: "São Paulo",
+    state: "SP",
+    country: "Brasil",
+  },
   createdAt: new Date(),
 };
+
+const mockRestaurants: Restaurant[] = [
+  {
+    id: "restaurant-1",
+    name: "Restaurante Italiano",
+    addressId: "address-1",
+    address: {
+      id: "address-1",
+      cep: "01234-567",
+      street: "Rua das Pizzas",
+      number: "456",
+      city: "São Paulo",
+      state: "SP",
+      country: "Brasil",
+    },
+    coordinates: {
+      latitude: -23.5505,
+      longitude: -46.6333,
+    },
+    createdAt: new Date(),
+  },
+  {
+    id: "restaurant-2", 
+    name: "Pizzaria Express",
+    addressId: "address-2",
+    address: {
+      id: "address-2",
+      cep: "04567-890",
+      street: "Avenida dos Hambúrgueres",
+      number: "789",
+      city: "Rio de Janeiro",
+      state: "RJ",
+      country: "Brasil",
+    },
+    coordinates: {
+      latitude: -22.9068,
+      longitude: -43.1729,
+    },
+    createdAt: new Date(),
+  },
+  {
+    id: "restaurant-3",
+    name: "Hamburgueria Gourmet",
+    addressId: "address-3",
+    address: {
+      id: "address-3",
+      cep: "07890-123",
+      street: "Rua dos Sushis",
+      number: "321",
+      city: "Belo Horizonte",
+      state: "MG",
+      country: "Brasil",
+    },
+    coordinates: {
+      latitude: -19.9167,
+      longitude: -43.9345,
+    },
+    createdAt: new Date(),
+  },
+  {
+    id: "restaurant-4",
+    name: "Sushi Bar",
+    addressId: "address-4",
+    address: {
+      id: "address-4",
+      cep: "01111-222",
+      street: "Avenida das Massas",
+      number: "654",
+      city: "Curitiba",
+      state: "PR",
+      country: "Brasil",
+    },
+    coordinates: {
+      latitude: -25.4289,
+      longitude: -49.2671,
+    },
+    createdAt: new Date(),
+  },
+];
 
 const mockCategories: Category[] = [
   { id: "1", name: "Pizza", createdAt: new Date() },
@@ -102,6 +190,155 @@ const simulateNetworkDelay = (ms: number = 500): Promise<void> => {
 };
 
 export const restaurantService = {
+  // Buscar todos os restaurantes
+  async getAllRestaurants(): Promise<Restaurant[]> {
+    try {
+      const apiAvailable = await isApiAvailable();
+
+      if (apiAvailable) {
+        const response = await api.get("/restaurants");
+
+        console.log("🏪 Raw API response:", response.data);
+        console.log("🏪 Response data type:", typeof response.data);
+        console.log("🏪 Response data keys:", Object.keys(response.data || {}));
+
+        // A API retorna { actualPage, amount, data: [...] }
+        let restaurants = [];
+        
+        if (response.data && response.data.data && Array.isArray(response.data.data)) {
+          // Formato: { actualPage, amount, data: [...] }
+          restaurants = response.data.data;
+          console.log("🏪 Using data.data format, found", restaurants.length, "restaurants");
+        } else if (response.data && Array.isArray(response.data)) {
+          // Formato: [...] (array direto)
+          restaurants = response.data;
+          console.log("🏪 Using direct array format, found", restaurants.length, "restaurants");
+        } else if (response.data && response.data.restaurants && Array.isArray(response.data.restaurants)) {
+          // Formato: { restaurants: [...] }
+          restaurants = response.data.restaurants;
+          console.log("🏪 Using data.restaurants format, found", restaurants.length, "restaurants");
+        } else {
+          console.log("🏪 Unknown API response format, using mock data");
+          restaurants = mockRestaurants;
+        }
+
+        return restaurants;
+      } else {
+        console.log("🏪 Using mock restaurants");
+        return mockRestaurants;
+      }
+    } catch (error) {
+      console.error("Erro ao buscar restaurantes:", error);
+      console.log("🏪 Falling back to mock restaurants");
+      return mockRestaurants;
+    }
+  },
+
+  // Buscar restaurantes por proximidade
+  async getRestaurantsByProximity(
+    latitude: number,
+    longitude: number,
+    radiusInKm: number = 10,
+    page: number = 1,
+    perPage: number = 20
+  ): Promise<{
+    restaurants: Restaurant[];
+    totalCount: number;
+    totalPages: number;
+    currentPage: number;
+  }> {
+    try {
+      const apiAvailable = await isApiAvailable();
+
+      if (apiAvailable) {
+        // Teste simplificado primeiro
+        console.log("📍 Testing simple proximity request...");
+        
+        // Construir query string manualmente para evitar problemas de encoding
+        const queryParams = new URLSearchParams({
+          latitude: latitude.toString(),
+          longitude: longitude.toString(),
+          radiusInKm: radiusInKm.toString(),
+        });
+
+        const url = `/restaurants/search/proximity?${queryParams.toString()}`;
+        console.log("📍 Proximity API request URL:", url);
+
+        // Teste com timeout maior para debug
+        const response = await api.get(url, {
+          timeout: 10000, // 10 segundos
+        });
+
+        console.log("📍 Proximity API response:", response.data);
+
+        // Mapear a resposta da API para o formato esperado
+        const restaurants = (response.data.restaurants || []).map((restaurant: any) => {
+          console.log("📍 Mapeando restaurante:", restaurant);
+          
+          const mappedRestaurant = {
+            ...restaurant,
+            // Extrair coordenadas do objeto address e converter para números
+            coordinates: restaurant.coordinates || (restaurant.address ? {
+              latitude: Number(restaurant.address.latitude),
+              longitude: Number(restaurant.address.longitude),
+            } : undefined),
+          };
+          
+          console.log("📍 Restaurante mapeado:", mappedRestaurant);
+          return mappedRestaurant;
+        });
+
+        return {
+          restaurants,
+          totalCount: response.data.totalCount || 0,
+          totalPages: response.data.totalPages || 1,
+          currentPage: response.data.currentPage || 1,
+        };
+      } else {
+        // Fallback para mock data com filtro por proximidade
+        console.log("📍 API not available, using mock proximity data");
+        const mockWithCoordinates = mockRestaurants.filter(r => r.coordinates);
+        
+        return {
+          restaurants: mockWithCoordinates,
+          totalCount: mockWithCoordinates.length,
+          totalPages: 1,
+          currentPage: 1,
+        };
+      }
+    } catch (error: any) {
+      console.error("Erro ao buscar restaurantes por proximidade:", error);
+      
+      // Log detalhado do erro
+      if (error.response) {
+        console.error("📍 Error response data:", error.response.data);
+        console.error("📍 Error response status:", error.response.status);
+        console.error("📍 Error response headers:", error.response.headers);
+        
+        // Se for erro 400, pode ser problema de validação
+        if (error.response.status === 400) {
+          console.error("📍 Bad Request - Verificar parâmetros enviados:");
+          console.error("📍 Latitude:", latitude);
+          console.error("📍 Longitude:", longitude);
+          console.error("📍 RadiusInKm:", radiusInKm);
+        }
+      } else if (error.request) {
+        console.error("📍 Error request:", error.request);
+      } else {
+        console.error("📍 Error message:", error.message);
+      }
+      
+      // Fallback para mock data
+      const mockWithCoordinates = mockRestaurants.filter(r => r.coordinates);
+      return {
+        restaurants: mockWithCoordinates,
+        totalCount: mockWithCoordinates.length,
+        totalPages: 1,
+        currentPage: 1,
+      };
+    }
+  },
+
   // Buscar informações do restaurante
   async getRestaurant(restaurantId: string): Promise<Restaurant> {
     try {
@@ -319,6 +556,68 @@ export const restaurantService = {
       // Fallback para dados mock
       await simulateNetworkDelay();
       return mockDishes.slice(0, limit);
+    }
+  },
+
+  // Buscar prato aleatório
+  async getRandomDish(
+    restaurantId: string,
+    category?: string
+  ): Promise<Dish | null> {
+    try {
+      const apiAvailable = await isApiAvailable();
+
+      if (apiAvailable) {
+        const params = new URLSearchParams();
+        if (category) {
+          params.append("category", category);
+        }
+
+        const queryString = params.toString();
+        const url = `/dishes/random/${restaurantId}${queryString ? `?${queryString}` : ""}`;
+        const response = await api.get(url);
+        
+        console.log("🎲 Random dish response:", response.data);
+        
+        // Extrair o prato da resposta que vem no formato {"dish": {...}}
+        const dish = response.data.dish || response.data;
+        return dish;
+      } else {
+        // Usar dados mock
+        await simulateNetworkDelay();
+        let availableDishes = [...mockDishes];
+        
+        if (category) {
+          availableDishes = availableDishes.filter((dish) => 
+            dish.categories?.includes(category)
+          );
+        }
+        
+        if (availableDishes.length === 0) {
+          return null;
+        }
+        
+        const randomIndex = Math.floor(Math.random() * availableDishes.length);
+        return availableDishes[randomIndex];
+      }
+    } catch (error) {
+      console.error("Erro ao buscar prato aleatório:", error);
+      // Fallback para dados mock
+      await simulateNetworkDelay();
+      let availableDishes = [...mockDishes];
+      
+      if (category) {
+        availableDishes = availableDishes.filter((dish) => 
+          dish.categories?.includes(category)
+        );
+      }
+      
+      if (availableDishes.length === 0) {
+        return null;
+      }
+      
+      const randomIndex = Math.floor(Math.random() * availableDishes.length);
+      return availableDishes[randomIndex];
     }
   },
 };

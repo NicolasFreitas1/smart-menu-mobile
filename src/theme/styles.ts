@@ -8,7 +8,7 @@ export const createGlobalStyles = (colors: ThemeColors) =>
       flex: 1,
       backgroundColor: colors.background,
       padding: 16,
-      paddingBottom: 80,
+      paddingBottom: 100,
     },
     card: {
       backgroundColor: colors.card,
@@ -60,7 +60,7 @@ export const createGlobalStyles = (colors: ThemeColors) =>
 
     // Listas
     list: {
-      gap: 12,
+      marginVertical: 6,
     },
     listItem: {
       flexDirection: "row",

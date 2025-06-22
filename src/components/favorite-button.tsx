@@ -116,8 +116,7 @@ export function FavoriteButton({
       <Feather
         name={isFavorite ? "heart" : "heart"}
         size={size * 0.6}
-        color={isFavorite ? colors.error : colors.mutedForeground}
-        style={isFavorite ? styles.filledHeart : undefined}
+        color={isFavorite ? colors.destructive : colors.mutedForeground}
       />
     </TouchableOpacity>
   );
@@ -128,9 +127,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     borderRadius: 20,
-  },
-  filledHeart: {
-    fill: "#EF4444", // Cor de preenchimento para coração cheio
   },
 });
 

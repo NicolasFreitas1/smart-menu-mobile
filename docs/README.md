@@ -365,3 +365,311 @@ O sistema de armazenamento local fornece:
 - ✅ **Performance otimizada** para cada tipo de dado
 - ✅ **Escalabilidade** para futuras funcionalidades
 - ✅ **Documentação completa** para desenvolvedores
+
+# Smart Menu Mobile
+
+Um aplicativo de cardápio inteligente com Inteligência Artificial para restaurantes, desenvolvido em React Native com Expo.
+
+## 🎯 Propósito
+
+O Smart Menu Mobile foi desenvolvido para agilizar e personalizar a experiência de escolha de pratos pelos clientes, reduzindo a sobrecarga dos garçons e otimizando o atendimento. O app oferece uma solução completa de autoatendimento com recursos inteligentes de sugestão e personalização.
+
+## ✨ Funcionalidades Principais
+
+### 🏠 Tela Inicial
+
+- Navegação simples e intuitiva
+- Acesso rápido a todas as funcionalidades
+- Interface responsiva e moderna
+
+### 🤖 Chatbot Inteligente
+
+- Assistente de IA para sugestões personalizadas
+- Fluxo de conversação estruturado
+- Integração com dados do restaurante
+- Fallback para dados mock quando offline
+
+### 📋 Cardápio Digital
+
+- Lista completa de pratos com imagens, descrições e preços
+- Sistema de categorias e filtros
+- Busca e navegação intuitiva
+- Modo offline com cache local
+
+### 🛒 Sistema de Pedidos
+
+- Carrinho de compras completo
+- Gestão de quantidades e observações
+- Finalização de pedidos
+- Histórico de pedidos
+
+### 🎲 Surprise Me
+
+- Descoberta aleatória de pratos
+- Filtros por categoria
+- Experiência gamificada
+
+## 🚀 Funcionalidades Diferenciais
+
+### 📅 Integração com Calendário e Reservas
+
+- **Sistema de Reservas Completo**: Criar, gerenciar e cancelar reservas
+- **Integração com Calendário Nativo**: Adiciona automaticamente reservas ao calendário do dispositivo
+- **Lembretes Automáticos**: Notificações de lembrete antes da reserva
+- **Permissões Inteligentes**: Solicita permissão do calendário apenas quando necessário
+
+**Como Funciona:**
+
+1. Usuário cria uma reserva no app
+2. Sistema solicita permissão do calendário
+3. Reserva é adicionada automaticamente ao calendário
+4. Lembretes são configurados (1 hora e 15 minutos antes)
+5. Notificações push são enviadas nos horários programados
+
+### 📱 Modo Offline para Consulta de Cardápio
+
+- **Cache Inteligente**: Armazena cardápio localmente no primeiro acesso
+- **Sincronização Automática**: Atualiza dados quando há conexão
+- **Funcionamento Offline**: Acesso completo ao cardápio sem internet
+- **Ações Pendentes**: Salva ações para sincronizar quando online
+
+**Como Funciona:**
+
+1. App verifica conectividade na inicialização
+2. Se online: sincroniza dados do servidor
+3. Se offline: usa dados em cache
+4. Ações offline são salvas e processadas quando há conexão
+5. Sincronização automática em background
+
+### 📍 Geolocalização para Promoções por Proximidade
+
+- **Geofencing Inteligente**: Detecta quando usuário está próximo do restaurante
+- **Promoções Contextuais**: Envia ofertas baseadas na localização
+- **Monitoramento em Background**: Funciona mesmo com app fechado
+- **Controle de Privacidade**: Usuário pode ativar/desativar
+
+**Como Funciona:**
+
+1. Sistema configura geofences para restaurantes
+2. Monitora localização do usuário em background
+3. Detecta entrada/saída dos geofences
+4. Envia notificações de promoção quando usuário entra
+5. Registra eventos para análise
+
+### 🔔 Notificações Push Personalizadas
+
+- **Notificações Contextuais**: Baseadas no histórico e preferências
+- **Tipos Diversificados**: Promoções, lembretes, atualizações de pedido
+- **Personalização Inteligente**: Adapta conteúdo ao perfil do usuário
+- **Gestão Completa**: Marcação como lida, histórico, configurações
+
+**Como Funciona:**
+
+1. Sistema registra token de notificação
+2. Analisa histórico e preferências do usuário
+3. Envia notificações personalizadas
+4. Permite interação direta com notificações
+5. Navegação automática para telas relevantes
+
+## 🛠️ Tecnologias Utilizadas
+
+- **React Native**: Framework principal
+- **Expo**: Plataforma de desenvolvimento
+- **TypeScript**: Tipagem estática
+- **SQLite**: Banco de dados local
+- **AsyncStorage**: Storage local
+- **React Navigation**: Navegação
+- **NativeWind**: Estilização com TailwindCSS
+- **Expo Calendar**: Integração com calendário
+- **Expo Location**: Geolocalização
+- **Expo Notifications**: Notificações push
+
+## 📱 Permissões Necessárias
+
+### iOS
+
+- **Calendário**: Para adicionar reservas automaticamente
+- **Localização**: Para promoções por proximidade
+- **Notificações**: Para notificações push
+
+### Android
+
+- **Calendário**: Para adicionar reservas automaticamente
+- **Localização**: Para promoções por proximidade
+- **Notificações**: Para notificações push
+- **Background Location**: Para geofencing
+
+## 🚀 Como Executar
+
+1. **Instalar dependências:**
+
+   ```bash
+   npm install
+   ```
+
+2. **Instalar dependências das funcionalidades diferenciais:**
+
+   ```bash
+   npx expo install expo-calendar expo-location expo-notifications expo-device expo-constants
+   ```
+
+3. **Executar o projeto:**
+
+   ```bash
+   npm start
+   ```
+
+4. **Executar em dispositivo:**
+   ```bash
+   npm run android
+   # ou
+   npm run ios
+   ```
+
+## 📁 Estrutura do Projeto
+
+```
+src/
+├── components/          # Componentes reutilizáveis
+├── context/            # Contextos React
+├── hooks/              # Hooks customizados
+├── pages/              # Telas do aplicativo
+├── services/           # Serviços e APIs
+│   ├── reservation.ts  # Serviço de reservas
+│   ├── location.ts     # Serviço de geolocalização
+│   ├── push-notifications.ts # Serviço de notificações
+│   └── offline-sync.ts # Serviço de sincronização
+├── types/              # Definições de tipos
+└── utils/              # Utilitários
+```
+
+## 🔧 Configuração
+
+### Notificações Push
+
+1. Configure o projeto no Expo
+2. Atualize o `projectId` em `push-notifications.ts`
+3. Configure as chaves de notificação
+
+### Geolocalização
+
+1. Configure as coordenadas dos restaurantes
+2. Ajuste os raios de geofencing
+3. Configure as mensagens de promoção
+
+### Calendário
+
+1. Teste as permissões em dispositivo físico
+2. Configure os templates de evento
+3. Ajuste os lembretes automáticos
+
+## 📊 Funcionalidades por Status
+
+| Funcionalidade            | Status           | Implementação                     |
+| ------------------------- | ---------------- | --------------------------------- |
+| Tela Inicial              | ✅ Completa      | Navegação simples e intuitiva     |
+| Chatbot IA                | ✅ Completa      | Assistente com fluxo estruturado  |
+| Cardápio                  | ✅ Completa      | Lista com filtros e cache         |
+| Pedidos                   | ✅ Completa      | Carrinho e finalização            |
+| Surprise Me               | ✅ Completa      | Descoberta aleatória              |
+| **Reservas + Calendário** | ✅ **Nova**      | Sistema completo com integração   |
+| **Modo Offline**          | ✅ **Melhorado** | Cache inteligente e sincronização |
+| **Geolocalização**        | ✅ **Nova**      | Geofencing e promoções            |
+| **Notificações Push**     | ✅ **Nova**      | Sistema personalizado             |
+
+## 🎯 Próximos Passos
+
+- [ ] Implementar backend para notificações push
+- [ ] Adicionar mais opções de personalização
+- [ ] Implementar sistema de avaliações
+- [ ] Adicionar integração com pagamentos
+- [ ] Implementar analytics e métricas
+
+## 📄 Licença
+
+Este projeto está sob a licença MIT. Veja o arquivo LICENSE para mais detalhes.
+
+## 🤝 Contribuição
+
+Contribuições são bem-vindas! Por favor, leia as diretrizes de contribuição antes de submeter um pull request.
+
+## 🐛 Troubleshooting
+
+### Erro de JSON Parse
+
+Se você encontrar o erro `[SyntaxError: JSON Parse error: Unexpected character: o]`, isso indica dados corrompidos no storage. O app agora inclui limpeza automática na inicialização, mas você pode forçar a limpeza manualmente:
+
+```typescript
+import { cleanupStorage } from "./src/utils/storage-cleanup";
+
+// Limpeza completa do storage
+await cleanupStorage();
+```
+
+### Problemas de Permissões
+
+Se as funcionalidades de localização, notificações ou calendário não funcionarem:
+
+1. **Verifique as permissões no dispositivo**
+2. **Reinicie o app após conceder permissões**
+3. **Verifique se as permissões estão configuradas no app.json**
+
+### Problemas de Sincronização
+
+Se a sincronização offline não funcionar:
+
+1. **Verifique a conectividade**
+2. **Force uma sincronização manual**
+3. **Limpe o cache se necessário**
+
+```typescript
+// Verificar conectividade
+const isOnline = await offlineSyncService.checkConnectivity();
+
+// Forçar sincronização
+await offlineSyncService.forceSync();
+
+// Limpar cache
+await offlineSyncService.clearCache();
+```
+
+## 📁 Estrutura do Projeto
+
+```
+src/
+├── components/          # Componentes React
+│   ├── assistant/      # Componentes do chatbot
+│   ├── cart/          # Componentes do carrinho
+│   ├── home/          # Componentes da tela inicial
+│   ├── menu/          # Componentes do cardápio
+│   └── ui/            # Componentes de UI reutilizáveis
+├── context/           # Contextos React
+├── hooks/             # Hooks customizados
+├── lib/               # Bibliotecas e configurações
+├── navigation/        # Navegação do app
+├── pages/             # Telas do app
+├── services/          # Serviços (API, storage, etc.)
+├── theme/             # Configuração de tema
+├── types/             # Definições de tipos TypeScript
+└── utils/             # Utilitários
+```
+
+## 🤝 Contribuição
+
+1. Fork o projeto
+2. Crie uma branch para sua feature (`git checkout -b feature/AmazingFeature`)
+3. Commit suas mudanças (`git commit -m 'Add some AmazingFeature'`)
+4. Push para a branch (`git push origin feature/AmazingFeature`)
+5. Abra um Pull Request
+
+## 📄 Licença
+
+Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
+
+## 📞 Suporte
+
+Para suporte, envie um email para suporte@smartmenu.com ou abra uma issue no GitHub.
+
+---
+
+**Smart Menu Mobile** - Transformando a experiência de pedidos em restaurantes com IA e tecnologia móvel moderna.

@@ -273,7 +273,10 @@ export async function populateSampleData() {
 
     // Salva notificações
     for (const notification of sampleNotifications) {
-      await databaseService.saveNotification(notification);
+      await databaseService.saveNotification({
+        ...notification,
+        isRead: notification.isRead ? 1 : 0
+      });
     }
 
     console.log("Dados de exemplo inseridos com sucesso!");

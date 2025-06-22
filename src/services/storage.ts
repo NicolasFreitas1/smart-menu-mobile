@@ -1,17 +1,19 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-// Chaves de armazenamento
-export const STORAGE_KEYS = {
-  THEME: "@smart-menu:theme",
-  CART: "@smart-menu:cart",
-  AUTH_TOKEN: "@smart-menu:auth:token",
-  USER: "@smart-menu:auth:user",
-  RESTAURANT_HISTORY: "@smart-menu:restaurant:history",
-  USER_PREFERENCES: "@smart-menu:user:preferences",
-  LAST_VISITED_RESTAURANT: "@smart-menu:restaurant:last-visited",
+// Chaves para o storage
+const STORAGE_KEYS = {
+  THEME: "theme",
+  CART: "cart",
+  AUTH_TOKEN: "auth_token",
+  USER: "user",
+  USER_PREFERENCES: "user_preferences",
+  RESTAURANT_HISTORY: "restaurant_history",
+  LAST_VISITED_RESTAURANT: "last_visited_restaurant",
+  SELECTED_RESTAURANT: "selected_restaurant",
+  RESERVATIONS: "reservations",
 } as const;
 
-// Tipos para os dados armazenados
+// Interface para preferências do usuário
 export interface UserPreferences {
   favoriteCategories?: string[];
   dietaryRestrictions?: string[];
@@ -23,6 +25,7 @@ export interface UserPreferences {
   };
 }
 
+// Interface para histórico de restaurantes
 export interface RestaurantHistory {
   id: string;
   name: string;
@@ -36,7 +39,16 @@ class StorageService {
   async getItem<T>(key: string): Promise<T | null> {
     try {
       const item = await AsyncStorage.getItem(key);
-      return item ? JSON.parse(item) : null;
+      if (!item) return null;
+      
+      // Tentar fazer parse de JSON
+      try {
+        return JSON.parse(item);
+      } catch (parseError) {
+        // Se falhar o parse, retornar o item como string
+        console.warn(`Item ${key} não é JSON válido, retornando como string:`, parseError);
+        return item as T;
+      }
     } catch (error) {
       console.error(`Erro ao ler item ${key}:`, error);
       return null;
@@ -54,7 +66,13 @@ class StorageService {
         return;
       }
 
-      await AsyncStorage.setItem(key, JSON.stringify(value));
+      // Se o valor já for string, salvar diretamente
+      if (typeof value === 'string') {
+        await AsyncStorage.setItem(key, value);
+      } else {
+        // Para outros tipos, fazer stringify
+        await AsyncStorage.setItem(key, JSON.stringify(value));
+      }
     } catch (error) {
       console.error(`Erro ao salvar item ${key}:`, error);
       throw error;
@@ -193,6 +211,83 @@ class StorageService {
     return this.setItem(STORAGE_KEYS.LAST_VISITED_RESTAURANT, restaurantId);
   }
 
+  // Métodos específicos para restaurante selecionado
+  async getSelectedRestaurant(): Promise<any | null> {
+    return this.getItem<any>(STORAGE_KEYS.SELECTED_RESTAURANT);
+  }
+
+  async setSelectedRestaurant(restaurant: any): Promise<void> {
+    // Validação para garantir que o restaurante tem os campos necessários
+    if (!restaurant || !restaurant.id || !restaurant.name) {
+      console.warn(
+        "⚠️ Tentativa de salvar restaurante inválido:",
+        restaurant
+      );
+      return;
+    }
+
+    return this.setItem(STORAGE_KEYS.SELECTED_RESTAURANT, restaurant);
+  }
+
+  async clearSelectedRestaurant(): Promise<void> {
+    return this.removeItem(STORAGE_KEYS.SELECTED_RESTAURANT);
+  }
+
+  // Métodos específicos para reservas
+  async getReservations(): Promise<any[] | null> {
+    try {
+      console.log('🔍 Storage: Buscando reservas...');
+      const reservations = await this.getItem<any[]>(STORAGE_KEYS.RESERVATIONS);
+      console.log('📋 Storage: Reservas encontradas:', reservations?.length || 0);
+      console.log('📋 Storage: Detalhes:', reservations);
+      return reservations;
+    } catch (error) {
+      console.error('❌ Storage: Erro ao buscar reservas:', error);
+      return null;
+    }
+  }
+
+  async setReservations(reservations: any[]): Promise<void> {
+    try {
+      console.log('💾 Storage: Salvando reservas:', reservations.length);
+      console.log('💾 Storage: Detalhes:', reservations);
+      await this.setItem(STORAGE_KEYS.RESERVATIONS, reservations);
+      console.log('✅ Storage: Reservas salvas com sucesso');
+    } catch (error) {
+      console.error('❌ Storage: Erro ao salvar reservas:', error);
+      throw error;
+    }
+  }
+
+  async addReservation(reservation: any): Promise<void> {
+    try {
+      console.log('➕ Storage: Adicionando reserva:', reservation);
+      const reservations = (await this.getReservations()) || [];
+      reservations.push(reservation);
+      console.log('📋 Storage: Total de reservas após adição:', reservations.length);
+      await this.setReservations(reservations);
+      console.log('✅ Storage: Reserva adicionada com sucesso');
+    } catch (error) {
+      console.error('❌ Storage: Erro ao adicionar reserva:', error);
+      throw error;
+    }
+  }
+
+  async updateReservation(reservationId: string, updates: any): Promise<void> {
+    const reservations = (await this.getReservations()) || [];
+    const index = reservations.findIndex(r => r.id === reservationId);
+    if (index >= 0) {
+      reservations[index] = { ...reservations[index], ...updates };
+      return this.setReservations(reservations);
+    }
+  }
+
+  async removeReservation(reservationId: string): Promise<void> {
+    const reservations = (await this.getReservations()) || [];
+    const filtered = reservations.filter(r => r.id !== reservationId);
+    return this.setReservations(filtered);
+  }
+
   // Método para migração de dados (se necessário no futuro)
   async migrateData(): Promise<void> {
     // Aqui você pode adicionar lógica de migração quando necessário
@@ -204,31 +299,46 @@ class StorageService {
     try {
       const keys = await AsyncStorage.getAllKeys();
       const info = await AsyncStorage.multiGet(keys);
-
-      let used = 0;
+      
+      let totalSize = 0;
       info.forEach(([key, value]) => {
         if (value) {
-          used += key.length + value.length;
+          totalSize += key.length + value.length;
         }
       });
 
-      return { used, total: 50 * 1024 * 1024 }; // Assumindo 50MB como limite
+      return {
+        used: totalSize,
+        total: 6 * 1024 * 1024, // 6MB é o limite típico do AsyncStorage
+      };
     } catch (error) {
       console.error("Erro ao obter informações do storage:", error);
       return null;
     }
   }
+
+  // Método para limpar dados antigos
+  async cleanupOldData(): Promise<void> {
+    try {
+      const keys = await AsyncStorage.getAllKeys();
+      const now = Date.now();
+      const oneWeekAgo = now - 7 * 24 * 60 * 60 * 1000; // 1 semana
+
+      for (const key of keys) {
+        // Aqui você pode implementar lógica para limpar dados antigos
+        // Por exemplo, verificar timestamps nos dados
+        console.log(`Verificando chave: ${key}`);
+      }
+    } catch (error) {
+      console.error("Erro ao limpar dados antigos:", error);
+    }
+  }
 }
 
-// Instância singleton
+// Instância singleton do serviço
 export const storageService = new StorageService();
 
-// Hooks úteis para usar com React
+// Hook para usar o storage (opcional)
 export const useStorage = () => {
-  return {
-    getItem: storageService.getItem.bind(storageService),
-    setItem: storageService.setItem.bind(storageService),
-    removeItem: storageService.removeItem.bind(storageService),
-    clear: storageService.clear.bind(storageService),
-  };
+  return storageService;
 };

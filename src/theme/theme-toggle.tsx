@@ -4,25 +4,37 @@ import { useTheme } from "./theme-provider";
 import Icon from "react-native-vector-icons/Feather";
 
 export function ThemeToggle() {
-  const { theme, setTheme, colors } = useTheme();
+  const { theme, setTheme, colors, isDark } = useTheme();
   const [isOpen, setIsOpen] = React.useState(false);
 
   const handleSelect = (newTheme: "light" | "dark" | "system") => {
+    console.log("Theme changed to:", newTheme);
     setTheme(newTheme);
     setIsOpen(false);
+  };
+
+  const handleTogglePress = () => {
+    console.log("Theme toggle pressed, current theme:", theme);
+    setIsOpen(true);
+  };
+
+  // Determina qual ícone mostrar baseado no tema atual
+  const getIconName = () => {
+    if (theme === "system") {
+      return isDark ? "moon" : "sun";
+    }
+    return theme === "dark" ? "moon" : "sun";
   };
 
   return (
     <>
       <TouchableOpacity
-        onPress={() => setIsOpen(true)}
+        onPress={handleTogglePress}
         style={[styles.button, { borderColor: colors.border }]}
+        activeOpacity={0.7}
+        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
       >
-        <Icon
-          name={theme === "dark" ? "moon" : "sun"}
-          size={20}
-          color={colors.foreground}
-        />
+        <Icon name={getIconName()} size={20} color={colors.foreground} />
       </TouchableOpacity>
 
       <Modal
@@ -48,9 +60,10 @@ export function ThemeToggle() {
             <TouchableOpacity
               style={[
                 styles.option,
-                theme === "light" && styles.selectedOption,
+                theme === "light" && { backgroundColor: colors.muted },
               ]}
               onPress={() => handleSelect("light")}
+              activeOpacity={0.7}
             >
               <Icon name="sun" size={20} color={colors.foreground} />
               <Text style={[styles.optionText, { color: colors.foreground }]}>
@@ -59,8 +72,12 @@ export function ThemeToggle() {
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[styles.option, theme === "dark" && styles.selectedOption]}
+              style={[
+                styles.option,
+                theme === "dark" && { backgroundColor: colors.muted },
+              ]}
               onPress={() => handleSelect("dark")}
+              activeOpacity={0.7}
             >
               <Icon name="moon" size={20} color={colors.foreground} />
               <Text style={[styles.optionText, { color: colors.foreground }]}>
@@ -71,9 +88,10 @@ export function ThemeToggle() {
             <TouchableOpacity
               style={[
                 styles.option,
-                theme === "system" && styles.selectedOption,
+                theme === "system" && { backgroundColor: colors.muted },
               ]}
               onPress={() => handleSelect("system")}
+              activeOpacity={0.7}
             >
               <Icon name="smartphone" size={20} color={colors.foreground} />
               <Text style={[styles.optionText, { color: colors.foreground }]}>
@@ -95,6 +113,15 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     justifyContent: "center",
     alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.05)",
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
   },
   overlay: {
     flex: 1,
@@ -113,10 +140,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     padding: 16,
-    gap: 12,
-  },
-  selectedOption: {
-    backgroundColor: "rgba(0, 0, 0, 0.05)",
+    marginLeft: 12,
   },
   optionText: {
     fontSize: 16,

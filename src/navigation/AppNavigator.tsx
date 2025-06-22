@@ -1,16 +1,84 @@
 import React from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { createStackNavigator } from "@react-navigation/stack";
 import Feather from "react-native-vector-icons/Feather";
 import FontAwesome5 from "react-native-vector-icons/FontAwesome5";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import { HomeScreen } from "../pages/home/HomeScreen";
 import { MenuScreen } from "../pages/menu/MenuScreen";
-import { AssistantScreen } from "../pages/AssistantScreen";
+import { AssistantScreen } from "../pages/assistant/AssistantScreen";
 import { SurpriseMeScreen } from "../pages/surprise-me/SurpriseMeScreen";
 import { CartScreen } from "../pages/cart/CartScreen";
+import { SettingsScreen } from "../pages/settings/SettingsScreen";
+import { ReservationScreen } from "../pages/reservations/ReservationScreen";
+import { OrderHistoryScreen } from "../pages/orders/OrderHistoryScreen";
 import { useTheme } from "../theme/theme-provider";
 
 const Tab = createBottomTabNavigator();
+const Stack = createStackNavigator();
+
+// Stack Navigator para Home (permite navegar para Settings e Reservations)
+function HomeStack() {
+  const { colors } = useTheme();
+
+  return (
+    <Stack.Navigator
+      screenOptions={{
+        headerShown: false,
+      }}
+    >
+      <Stack.Screen name="HomeMain" component={HomeScreen} />
+      <Stack.Screen
+        name="Settings"
+        component={SettingsScreen}
+        options={{
+          headerShown: true,
+          title: "Configurações",
+          headerBackTitle: "",
+          headerStyle: {
+            backgroundColor: colors.card,
+          },
+          headerTintColor: colors.foreground,
+          headerTitleStyle: {
+            fontWeight: "600",
+          },
+        }}
+      />
+      <Stack.Screen
+        name="Reservations"
+        component={ReservationScreen}
+        options={{
+          headerShown: true,
+          title: "Minhas Reservas",
+          headerBackTitle: "",
+          headerStyle: {
+            backgroundColor: colors.card,
+          },
+          headerTintColor: colors.foreground,
+          headerTitleStyle: {
+            fontWeight: "600",
+          },
+        }}
+      />
+      <Stack.Screen
+        name="OrderHistory"
+        component={OrderHistoryScreen}
+        options={{
+          headerShown: true,
+          title: "Histórico de Pedidos",
+          headerBackTitle: "",
+          headerStyle: {
+            backgroundColor: colors.card,
+          },
+          headerTintColor: colors.foreground,
+          headerTitleStyle: {
+            fontWeight: "600",
+          },
+        }}
+      />
+    </Stack.Navigator>
+  );
+}
 
 export function AppNavigator() {
   const { colors, isDark } = useTheme();
@@ -37,7 +105,7 @@ export function AppNavigator() {
     >
       <Tab.Screen
         name="Home"
-        component={HomeScreen}
+        component={HomeStack}
         options={{
           tabBarIcon: ({ focused }) => (
             <Feather

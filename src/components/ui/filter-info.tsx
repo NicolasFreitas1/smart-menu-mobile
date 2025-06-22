@@ -60,14 +60,16 @@ export function FilterInfo({
         style={{
           flexDirection: "row",
           alignItems: "center",
-          gap: 4,
+          marginHorizontal: 2,
           paddingHorizontal: 8,
           paddingVertical: 4,
           borderRadius: 4,
         }}
       >
         <Icon name="x" size={14} color={styles.mutedText.color} />
-        <Text style={[styles.mutedText, { fontSize: 12 }]}>Limpar filtros</Text>
+        <Text style={[styles.mutedText, { fontSize: 12, marginLeft: 4 }]}>
+          Limpar filtros
+        </Text>
       </TouchableOpacity>
     </View>
   );
