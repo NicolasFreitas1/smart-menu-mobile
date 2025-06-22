@@ -18,7 +18,7 @@ const getBaseURL = () => {
 
 // Configuração do axios com timeout
 const api = axios.create({
-  baseURL: getBaseURL(),
+  baseURL: "https://smart-menu-api.onrender.com",
   timeout: 10000, // 10 segundos
   headers: {
     "Content-Type": "application/json",
