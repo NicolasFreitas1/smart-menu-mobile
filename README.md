@@ -5,7 +5,6 @@
 ![Smart Menu](https://img.shields.io/badge/React%20Native-0.79.2-blue)
 ![Expo](https://img.shields.io/badge/Expo-53.0.11-black)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.8.3-blue)
-![License](https://img.shields.io/badge/License-MIT-green)
 
 ## 🎯 Visão Geral
 
@@ -158,7 +157,7 @@ O **Smart Menu Mobile** é uma aplicação completa de cardápio digital que ofe
 
 ```bash
 # Clone o repositório
-git clone https://github.com/seu-usuario/smart-menu-mobile.git
+git clone https://github.com/NicolasFreitas1/smart-menu-mobile.git
 cd smart-menu-mobile
 
 # Instale as dependências
@@ -170,24 +169,14 @@ npx expo start
 
 ### **Configuração do Ambiente**
 
-1. **Configurar Restaurant ID**
-
-   ```typescript
-   // src/config/app-config.ts
-   export const APP_CONFIG = {
-     restaurantId: "SEU-UUID-DO-RESTAURANTE",
-     // ... outras configurações
-   };
-   ```
-
-2. **Configurar API Backend**
+1. **Configurar API Backend**
 
    ```typescript
    // src/lib/axios.ts
    const DEV_IP = "192.168.1.100"; // IP da sua máquina
    ```
 
-3. **Configurar Notificações**
+2. **Configurar Notificações**
    ```json
    // app.json
    "notification": {
@@ -322,13 +311,6 @@ src/
 - ✅ iOS 13.0+
 - ✅ Web (React Native Web)
 
-### **Dispositivos Testados**
-
-- Samsung Galaxy S21
-- iPhone 12
-- Google Pixel 6
-- iPad Pro
-
 ## 🔒 Segurança
 
 ### **Práticas Implementadas**
@@ -344,113 +326,6 @@ src/
 - Calendário (para reservas)
 - Notificações (para push)
 - Internet (para sincronização)
-
-## 📈 Performance
-
-### **Otimizações Implementadas**
-
-- Lazy loading de componentes
-- Cache inteligente
-- Imagens otimizadas
-- Bundle splitting
-
-### **Métricas de Performance**
-
-- Tempo de inicialização: < 3s
-- Tempo de resposta: < 500ms
-- Uso de memória: < 100MB
-- Tamanho do app: < 50MB
-
-## 🚀 Deploy e Publicação
-
-### **Build de Desenvolvimento**
-
-```bash
-npx expo start
-```
-
-### **Build de Produção**
-
-```bash
-# Android
-npx expo build:android --type app-bundle
-
-# iOS
-npx expo build:ios --type archive
-```
-
-### **Publicação na Loja**
-
-1. Configurar EAS Build
-2. Gerar builds otimizados
-3. Submeter para revisão
-4. Publicar na Play Store/App Store
-
-## 🤝 Contribuição
-
-### **Como Contribuir**
-
-1. Fork o projeto
-2. Crie uma branch para sua feature
-3. Commit suas mudanças
-4. Push para a branch
-5. Abra um Pull Request
-
-### **Padrões de Código**
-
-- TypeScript strict mode
-- ESLint + Prettier
-- Conventional commits
-- Testes unitários
-
-## 📄 Licença
-
-Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
-
-## 🐛 Troubleshooting
-
-### **Problemas Comuns**
-
-#### **Erro de JSON Parse**
-
-```typescript
-// Limpeza automática implementada
-import { cleanupStorage } from "./src/utils/storage-cleanup";
-await cleanupStorage();
-```
-
-#### **Problemas de Permissões**
-
-- Verificar configurações do dispositivo
-- Limpar cache do app
-- Reinstalar o app
-
-#### **Problemas de Rede**
-
-- Verificar conectividade
-- Limpar cache offline
-- Forçar sincronização
-
-### **Logs de Debug**
-
-```bash
-# Habilitar logs detalhados
-export EXPO_DEBUG=true
-npx expo start
-```
-
-## 📞 Suporte
-
-- **Issues**: [GitHub Issues](https://github.com/seu-usuario/smart-menu-mobile/issues)
-- **Documentação**: [Wiki do Projeto](https://github.com/seu-usuario/smart-menu-mobile/wiki)
-- **Email**: suporte@smartmenu.com
-
-## 🎉 Agradecimentos
-
-- Equipe Expo pelo framework incrível
-- Comunidade React Native
-- Contribuidores do projeto
-- Restaurantes parceiros
 
 ---
 
